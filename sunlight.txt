@@ -1,0 +1,25 @@
+Act as an expert Creative Technologist and HTML5 Canvas specialist. 
+
+I need you to write a JavaScript function that injects a hyper-realistic "sunshine ray" (god-rays/crepuscular rays) effect into an existing HTML <canvas> element. Do not use standard CSS gradients or simple static shapes. 
+
+Please implement the following technical specifications:
+
+1. Visual Effect & Depth (2.5D/Advanced):
+- Do not render a physical sun circle. Only render the volumetric light beams slicing across the canvas.
+- Use a 2.5D depth illusion by layering multiple passes of rays that animate at slightly different speeds or frequencies (parallax shifting).
+- The rays must originate from an off-screen or off-center light source (e.g., coordinates X: 80%, Y: -10%).
+- Use canvas blending modes ('screen' or 'lighter') so the rays dynamically illuminate the existing background artwork without washing it out.
+
+2. Animation & Realism:
+- Implement a continuous animation loop using requestAnimationFrame.
+- Use Perlin noise, Simplex noise, or a smooth combination of overlapping sine/cosine waves to simulate volumetric dust motes and atmospheric shimmer.
+- The edges of the rays must be soft and feathered, fading out completely as they reach the bottom/opposite side of the canvas.
+- Incorporate a subtle dynamic opacity/flicker to mimic changing atmospheric density.
+
+3. Integration Constraints:
+- Provide a clean, modular JavaScript function or class (e.g., `initSunshineEffect(canvasElement)`).
+- It must hook into or overlay cleanly onto an existing canvas rendering context ('2d' or a lightweight WebGL shader if more performant) without destroying the existing drawings.
+- Ensure it handles canvas resizing dynamically.
+- Do not block user interaction or pointer events.
+
+Provide the fully commented, production-ready code along with a brief explanation of how the noise/layering algorithm creates the 2.5D depth.

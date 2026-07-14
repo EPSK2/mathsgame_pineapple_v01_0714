@@ -1,0 +1,814 @@
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --slot-cloud-width: clamp(13vw, 15vw, 17vw);
+  --slot-cloud-height: calc(var(--slot-cloud-width) * 0.62);
+  --slot-cloud-gap: clamp(0.5vw, 1vw, 1.5vw);
+}
+
+body {
+  font-family: "Comic Sans MS", "Noto Sans TC", sans-serif;
+  /* Use the canvas as a full-screen background, center the game shell */
+  background-color: #020617;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+#yellowBubbleText {
+  position: fixed;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-height: 78px;
+  padding: 10px 12px;
+  /*background: rgba(255, 255, 255, 0.82);*/
+  color: #3f2f1f;
+  font-size: 2em;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  word-break: break-word;
+  pointer-events: none;
+  z-index: 12;
+  transform: translate(-50%, -100%);
+}
+
+.speech-bubble {
+  display: none;
+}
+
+/* Bottom mode indicator arrows. Size and position are set in JS
+   to exactly match the full cloud-slot span. */
+#bottomModeArrowStrip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 40px;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.bottom-mode-arrow {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.bottom-mode-arrow rect {
+  fill: #111111;
+}
+
+.bottom-mode-arrow polyline {
+  fill: none;
+  stroke: #111111;
+  stroke-width: 26;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+
+/* Full-screen jungle canvas background */
+#gameCanvas {
+
+  position: fixed;
+  inset: 0;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+  z-index: -1;
+}
+
+/* Centered game container over the canvas */
+.game-shell {
+  position: relative;
+  z-index: 1;
+  padding: 1.5rem;
+  padding-top: calc(1.5rem + 6vh); /* push content below fixed header */
+}
+
+/* Header bar for game title: full-width at top 5% of screen */
+.game-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 7.5vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.35);
+  z-index: 100;
+}
+
+
+.game-header h1 {
+  margin: 0;
+}
+
+
+/* Absolute-positioned number tiles overlay */
+#numbers {
+
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  z-index: 2;
+}
+
+/* Number tiles */
+.num {
+  position: absolute;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  transform: translate(-50%, -100%);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+/* Number tiles inherit their size from inline styles (based on cloud image scale) */
+#numbers .num {
+  width: auto;
+  height: auto;
+}
+
+
+
+.num:hover {
+
+  transform: translate(-50%, -100%) translateY(-3px);
+  box-shadow: none;
+}
+
+
+
+.num.dragging {
+  opacity: 0.7;
+  transform: translate(-50%, -100%) scale(1.08);
+}
+
+
+.num.bounce-back {
+  animation: bounceBack 0.6s ease;
+}
+
+/* Cloud image inside a number tile */
+.num-cloud-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+  transform: scale(1.4);           /* ← add this line */
+  transform-origin: center center; /* ← optional but recommended */
+}
+
+/* Blurred glow image behind the cloud, used to simulate a soft glow */
+.num-cloud-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  filter: blur(10px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;                 /* hide by default */
+  transition: opacity 0.2s;   /* smooth fade */
+}
+
+.num:hover .num-cloud-glow,
+.num.dragging .num-cloud-glow {
+  opacity: 1;
+}
+
+/* Text label centred over the cloud; does not intercept input */
+.num-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: bold;
+  font-size: var(--tile-number-font-size, 3rem);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #6f4e37;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.num-label.two-digit {
+  font-size: calc(var(--tile-number-font-size, 3rem) * 0.8);
+}
+
+/* Slots (front face overlay on the cloud image, acts as a transparent drop-target)
+   NOTE: width/height are controlled dynamically in JS to match the cloud image. */
+.slot {
+
+  transition: transform 0.25s ease-out, background-color 0.25s ease-out,
+    border-color 0.25s ease-out, box-shadow 0.25s ease-out;
+  border-radius: 12px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgba(56, 189, 248, 0.0);
+  background-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+
+  width: auto;
+  height: auto;
+}
+
+
+/* Container row for cloud targets */
+#slots {
+  position: fixed;
+  top: 74%;
+  left: 17.5%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: var(--slot-cloud-gap);
+  z-index: 3;
+}
+
+
+
+/* Wrapper for slot so we can overlay the cloud image */
+.slot-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--slot-cloud-width);
+  height: var(--slot-cloud-height);
+}
+
+
+/* Cloud image used as the drop target visual */
+.slot-cloud-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: none;
+  transform: scale(1);
+  transform-origin: center center;
+  pointer-events: none;
+}
+
+
+/* Legacy cube scene styles (no longer used) */
+.slot-scene {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  perspective: 800px;
+  z-index: 3; /* ensure cubes render above stumps */
+}
+
+/* 3D opaque cube container (base 20x20x20, scaled up via transform) */
+.slot-cube {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+
+/* Inner spinner that actually rotates the cube */
+.slot-cube-spinner {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: cube-spin 10s linear infinite;
+}
+
+
+.slot-cube-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: #808080;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* depth = 10px (half of base cube size) */
+.slot-cube-face-front {
+  transform: translateZ(10px);
+}
+
+.slot-cube-face-back {
+  transform: rotateY(180deg) translateZ(10px);
+}
+
+.slot-cube-face-right {
+  transform: rotateY(90deg) translateZ(10px);
+}
+
+.slot-cube-face-left {
+  transform: rotateY(-90deg) translateZ(10px);
+}
+
+.slot-cube-face-top {
+  transform: rotateX(90deg) translateZ(10px);
+}
+
+.slot-cube-face-bottom {
+  transform: rotateX(-90deg) translateZ(10px);
+}
+
+/* Combined spin animation with different axis speeds encoded in rotation ratios */
+@keyframes cube-spin {
+  0% {
+    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(360deg) rotateY(540deg) rotateZ(720deg);
+  }
+}
+
+/* Active cube color animation between blue and milk-white */
+@keyframes cube-active-color {
+  0% {
+    background-color: #1d4ed8;
+  }
+  50% {
+    background-color: #fef9c3;
+  }
+  100% {
+    background-color: #1d4ed8;
+  }
+}
+
+
+/* Fence gate overlay */
+.slot-gate-image {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Tree stump below each cube */
+.slot-stump-image {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translate(-50%, 0) scale(1);
+  width: 128px;
+  height: auto;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Soft shadow cast on the stump by the floating cube */
+.slot-shadow {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translate(-50%, -12px);
+  width: 90px;
+  height: 24px;
+  background: radial-gradient(ellipse at center,
+    rgba(0, 0, 0, 0.35) 0%,
+    rgba(0, 0, 0, 0.0) 70%);
+  pointer-events: none;
+  z-index: 2; /* above stump, below cube */
+  opacity: 0;
+  border-radius: 50%; /* ensure oval shape */
+}
+
+
+
+.slot.highlight {
+  /* Keep highlight class for logic, but remove yellow rectangle visuals */
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  transform: scale(1.05);
+  /*
+  border-color: #fbbf24;
+  background: #fef9c3;
+  transform: scale(1.05);
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.7);
+  */
+}
+
+
+.slot.filled {
+  /* Keep class for logic, but hide visual rectangle when filled */
+  border-style: solid;
+  border-color: transparent;
+  background: transparent;
+}
+
+
+
+
+.slot.error {
+  /* Keep class for logic, but hide red rectangle visuals */
+  animation: none;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+
+/* Bear outfit pop animation */
+
+.bear-outfit {
+  animation: pop 0.6s ease;
+}
+
+.chest-lid {
+  transform-origin: bottom center;
+  transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.chest.open .chest-lid {
+  transform: rotateX(-110deg);
+}
+
+/* Confetti */
+.confetti {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Speech bubble */
+.speech-bubble {
+  position: fixed;
+  top: 37.5%;
+  left: 22.5%;
+  transform-origin: top left;
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+
+
+/* Stamp display on victory */
+.stamp-display {
+  font-size: 6rem;
+  animation: spin 0.6s ease;
+}
+
+/* Difficulty & mode buttons */
+.difficulty-btn {
+  padding: 12px 24px;
+  margin: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  box-shadow: 0 6px 0 rgba(55, 65, 81, 0.25);
+}
+
+.difficulty-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 rgba(55, 65, 81, 0.35);
+}
+
+.difficulty-btn.easy {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+}
+
+.difficulty-btn.hard {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: white;
+}
+
+.mode-btn {
+  padding: 12px 24px;
+  margin: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  box-shadow: 0 6px 0 rgba(30, 64, 175, 0.7);
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+
+.mode-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 rgba(30, 64, 175, 0.8);
+}
+
+/* Victory modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle at top,
+    rgba(252, 211, 77, 0.4),
+    rgba(15, 23, 42, 0.8)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: linear-gradient(135deg, #fefce8, #ffffff);
+  border-radius: 24px;
+  padding: 30px;
+  max-width: 500px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.45);
+  text-align: center;
+}
+
+/* Utility */
+.opacity-50 {
+  opacity: 0.5;
+}
+
+/* Top-left slide-out menu arrow */
+.pineapple-box {
+  border-radius: 20px;
+  /* Layer 1 (Top): pattern SVG tile */
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10L25 40L-5 40Z' fill='%23FF8C00' fill-opacity='0.4'/%3E%3Cpath d='M70 60L85 90L55 90Z' fill='%23FF8C00' fill-opacity='0.3'/%3E%3Cpath d='M30 70L45 100L15 100Z' fill='%23FF8C00' fill-opacity='0.5'/%3E%3Cpath d='M80 20L95 50L65 50Z' fill='%23FF8C00' fill-opacity='0.35'/%3E%3C/svg%3E"),
+    /* Layer 2 (Bottom): base radial gradient */
+    radial-gradient(circle at center, #FFEA00 0%, #FFD700 60%, #B8860B 100%);
+  background-size: 100px 100px, 100% 100%;
+  background-repeat: repeat, no-repeat;
+}
+
+.menu-arrow {
+  position: fixed;
+  top: 8vh;
+  left: 0;
+  z-index: 1500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  width: 220px;
+  height: 56px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.85);
+  color: #000;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transform: translateX(calc(-100% + 30px));
+  transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 0.35s ease-out;
+}
+
+.menu-arrow:hover,
+.menu-arrow:focus-within {
+  transform: translateX(0);
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.9);
+}
+
+.menu-arrow::before {
+  content: "";
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translate(50%, -50%);
+  border-top: 24px solid transparent;
+  border-bottom: 24px solid transparent;
+  border-left: 32px solid rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+
+.menu-arrow-label {
+  margin-left: 18px;
+  font-size: 20px;
+}
+
+.menu-arrow::before {
+  content: "";
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translate(50%, -50%);
+  border-top: 24px solid transparent;
+  border-bottom: 24px solid transparent;
+  border-left: 32px solid rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+.menu-arrow-tip {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translate(50%, -50%);
+  font-size: 18px;
+  color: #000;
+  font-weight: bold;
+  pointer-events: none;
+}
+/* Right-side tabs container */
+.right-tabs {
+  position: fixed;
+  top: 8vh;
+  right: -1vw;
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+/* Individual right-side tab */
+.right-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 17.5px 14px;
+  border-radius: 16px;
+  
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10L25 40L-5 40Z' fill='%23FF8C00' fill-opacity='0.4'/%3E%3Cpath d='M70 60L85 90L55 90Z' fill='%23FF8C00' fill-opacity='0.3'/%3E%3Cpath d='M30 70L45 100L15 100Z' fill='%23FF8C00' fill-opacity='0.5'/%3E%3Cpath d='M80 20L95 50L65 50Z' fill='%23FF8C00' fill-opacity='0.35'/%3E%3C/svg%3E"),
+  /* Layer 2 (Bottom): base radial gradient */
+  radial-gradient(circle at center, #FFEA00 0%, #FFD700 60%, #B8860B 100%);
+  background-size: 100px 100px, 100% 100%;
+  background-repeat: repeat, no-repeat;
+  
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.85);
+  border: none;
+  cursor: pointer;
+  width: auto; /* sized by text length */
+}
+.right-tab .menu-arrow-label {
+  margin-left: 0; /* override default margin */
+}
+/* Animations */
+@keyframes pop {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceBack {
+  0% {
+    /* Keep the tile anchored at its crate centre */
+    transform: translate(-50%, -100%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    /* Hop up slightly while staying centred over the crate */
+    transform: translate(-50%, -100%) translateY(-30px) scale(0.9);
+  }
+  100% {
+    /* Return exactly to the original centred position */
+    transform: translate(-50%, -100%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    /* Keep the drop target centred over the cube while shaking */
+    transform: translate(-50%, -50%) translateX(0);
+  }
+  25% {
+    transform: translate(-50%, -50%) translateX(-10px);
+  }
+  75% {
+    transform: translate(-50%, -50%) translateX(10px);
+  }
+}
+
+/* Error animation for numbered clouds: hue shift then shake left/right */
+.num-error-shake {
+  animation: numErrorShake 0.6s ease;
+  filter: hue-rotate(-60deg);
+}
+
+@keyframes numErrorShake {
+  0%,
+  100% {
+    transform: translate(-50%, -100%) translateX(0);
+  }
+  25% {
+    transform: translate(-50%, -100%) translateX(-18px);
+  }
+  75% {
+    transform: translate(-50%, -100%) translateX(18px);
+  }
+}
+
+/* Error animation when a numbered cloud has been placed on a slot but the value is wrong.
+   The tile is pulled to the slot centre, tinted using a monochrome filter,
+   and shakes left/right for 2 seconds with ease-in-out timing. */
+.num-error-on-slot {
+  animation: numErrorShake 2s ease-in-out;
+}
+
+.num-error-on-slot .num-cloud-image,
+.num-error-on-slot .num-cloud-glow {
+  filter: brightness(0) saturate(100%) invert(92%) sepia(13%) saturate(1055%) hue-rotate(314deg) brightness(101%) contrast(101%);
+}
+
+.num-error-on-slot .num-label {
+  color: #000;
+}
+
+@keyframes numErrorSlotShake {
+  0%,
+  100% {
+    transform: translate(-50%, -100%) translateX(0);
+  }
+  10% {
+    transform: translate(-50%, -100%) translateX(-24px);
+  }
+  25% {
+    transform: translate(-50%, -100%) translateX(24px);
+  }
+  40% {
+    transform: translate(-50%, -100%) translateX(-24px);
+  }
+  55% {
+    transform: translate(-50%, -100%) translateX(24px);
+  }
+  70% {
+    transform: translate(-50%, -100%) translateX(-24px);
+  }
+  85% {
+    transform: translate(-50%, -100%) translateX(24px);
+  }
+}
+
+
+
+
+/* When a cloud tile is hovering over a slot (before placement),
+   flash the slot cloud image using an invert animation. */
+@keyframes slotCloudHoverInvert {
+  0% {
+    filter: invert(0%);
+  }
+  50% {
+    filter: invert(100%);
+  }
+  100% {
+    filter: invert(0%);
+  }
+}
+
+.slot-wrapper.highlight .slot-cloud-image {
+  animation: slotCloudHoverInvert 3s ease-in-out infinite;
+}
+
+@keyframes spin {
+
+  0% {
+    transform: scale(0) rotate(-45deg);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+
+

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exact Vector Wooden Arrow Canvas</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #3d1d06;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="arrowCanvas" width="960" height="320"></canvas>
+
+<script>
+const canvas = document.getElementById('arrowCanvas');
+const ctx = canvas.getContext('2d');
+
+// --- EXACT COORDINATE MAP ---
+// Main Front Face Vertices
+const p1 = { x: 55,  y: 120 };  // Leftmost arrow tip
+const p2 = { x: 265, y: 15 };   // Top-left arrowhead corner
+const p3 = { x: 245, y: 52 };   // Inner top neck
+const p4 = { x: 905, y: 17 };   // Top-right tail corner
+const p5 = { x: 860, y: 122 };  // Inner tail notch
+const p6 = { x: 905, y: 227 };  // Bottom-right tail corner
+const p7 = { x: 255, y: 185 };  // Inner bottom neck
+const p8 = { x: 281, y: 227 };  // Bottom-left arrowhead corner
+
+// Extrusion depth vector (3D effect)
+const depth = 14;
+
+// 1. Draw Background
+ctx.fillStyle = '#3d1d06';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+// 2. Draw Ambient Drop Shadow
+ctx.save();
+ctx.translate(15, 25);
+ctx.fillStyle = 'rgba(23, 8, 2, 0.65)';
+ctx.beginPath();
+ctx.moveTo(p1.x, p1.y);
+ctx.lineTo(p2.x, p2.y);
+ctx.lineTo(p3.x, p3.y);
+ctx.lineTo(p4.x, p4.y);
+ctx.lineTo(p5.x, p5.y);
+ctx.lineTo(p6.x, p6.y);
+ctx.lineTo(p7.x, p7.y);
+ctx.lineTo(p8.x, p8.y);
+ctx.closePath();
+ctx.fill();
+ctx.restore();
+
+// Helper to draw 3D side faces
+function drawSideFace(pt1, pt2, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(pt1.x, pt1.y);
+    ctx.lineTo(pt2.x, pt2.y);
+    ctx.lineTo(pt2.x, pt2.y + depth);
+    ctx.lineTo(pt1.x, pt1.y + depth);
+    ctx.closePath();
+    ctx.fill();
+}
+
+// 3. Draw 3D Side Thickness Edges
+drawSideFace(p1, p8, '#a37d50'); // Bottom slant of arrowhead
+drawSideFace(p8, p7, '#947045'); // Arrowhead bottom-back vertical step
+drawSideFace(p7, p6, '#b89466'); // Main shaft bottom edge
+drawSideFace(p6, p5, '#88643a'); // Lower tail notch inner slant
+
+// 4. Draw Front Face
+ctx.fillStyle = '#dbbe93';
+ctx.beginPath();
+ctx.moveTo(p1.x, p1.y);
+ctx.lineTo(p2.x, p2.y);
+ctx.lineTo(p3.x, p3.y);
+ctx.lineTo(p4.x, p4.y);
+ctx.lineTo(p5.x, p5.y);
+ctx.lineTo(p6.x, p6.y);
+ctx.lineTo(p7.x, p7.y);
+ctx.lineTo(p8.x, p8.y);
+ctx.closePath();
+ctx.fill();
+
+// 5. Apply Precise Vector Wood Grain Overlay
+ctx.save();
+// Clip drawing to the front face only
+ctx.beginPath();
+ctx.moveTo(p1.x, p1.y);
+ctx.lineTo(p2.x, p2.y);
+ctx.lineTo(p3.x, p3.y);
+ctx.lineTo(p4.x, p4.y);
+ctx.lineTo(p5.x, p5.y);
+ctx.lineTo(p6.x, p6.y);
+ctx.lineTo(p7.x, p7.y);
+ctx.lineTo(p8.x, p8.y);
+ctx.closePath();
+ctx.clip();
+
+// Setup wood line styles
+ctx.strokeStyle = '#cda97a';
+ctx.lineWidth = 1.5;
+ctx.lineCap = 'round';
+ctx.lineJoin = 'round';
+
+// Array of exact wave profiles mimicking the organic vector grain lines
+const grains = [
+    { yOffset: 40,  amp: 8,  freq: 0.008, knotX: 320, knotR: 25 },
+    { yOffset: 65,  amp: 12, freq: 0.007, knotX: 330, knotR: 35 },
+    { yOffset: 90,  amp: 14, freq: 0.009, knotX: 310, knotR: 15 },
+    { yOffset: 115, amp: 11, freq: 0.006, knotX: 340, knotR: 45 },
+    { yOffset: 140, amp: 15, freq: 0.008, knotX: 550, knotR: 30 },
+    { yOffset: 165, amp: 9,  freq: 0.007, knotX: 560, knotR: 20 },
+    { yOffset: 190, amp: 13, freq: 0.005, knotX: 540, knotR: 40 }
+];
+
+// Generate closely packed wavy lines
+for (let i = 20; i < 220; i += 4) {
+    ctx.beginPath();
+    let started = false;
+    
+    for (let x = 50; x < 920; x += 3) {
+        // Base horizontal plane
+        let y = i + Math.sin(x * 0.008) * 4;
+        
+        // Add characteristic wood whorls / knots deformations
+        let distToKnot1 = x - 320;
+        if (Math.abs(distToKnot1) < 160) {
+            y += Math.exp(-Math.pow(distToKnot1 / 60, 2)) * (i < 110 ? -15 : 15);
+        }
+        
+        let distToKnot2 = x - 650;
+        if (Math.abs(distToKnot2) < 200) {
+            y += Math.sin(distToKnot2 * 0.02) * 6 * Math.exp(-Math.pow(distToKnot2 / 100, 2));
+        }
+
+        if (!started) {
+            ctx.moveTo(x, y);
+            started = true;
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    // Randomize line shades slightly for natural wood texture variety
+    ctx.strokeStyle = i % 12 === 0 ? '#c29d6c' : (i % 8 === 0 ? '#e4caa3' : '#cca675');
+    ctx.lineWidth = i % 16 === 0 ? 2 : 1;
+    ctx.stroke();
+}
+
+ctx.restore();
+</script>
+
+</body>
+</html>

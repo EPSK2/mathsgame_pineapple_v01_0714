@@ -1,0 +1,31 @@
+<canvas id="myCanvas" width="500" height="500"></canvas>
+
+<script>
+  const canvas = document.getElementById('myCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // 1. Create an invisible, looping HTML5 video element
+  const video = document.createElement('video');
+  video.src = 'animation.mp4'; // Convert your GIF to MP4 or WebM
+  video.loop = true;
+  video.muted = true;         // Must be muted for browsers to auto-play
+  video.playsInline = true;
+
+  // 2. Start playback
+  video.play();
+
+  // 3. Create a clean animation loop to paint the video frames
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw the current video frame onto the canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    requestAnimationFrame(draw);
+  }
+
+  // Start the canvas render loop once the video is ready
+  video.addEventListener('play', () => {
+    requestAnimationFrame(draw);
+  });
+</script>

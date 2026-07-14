@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>菠蘿熊排序遊戲 - 主遊戲</title>
+  <link rel="stylesheet" href="game_style.css" />
+  <!-- 使用 Tailwind CDN 以支援原本的樣式類別 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-4 md:p-6">
+  <div class="max-w-3xl mx-auto">
+    <!-- 標題 -->
+    <h1
+      id="gameTitle"
+      class="text-3xl md:text-5xl font-bold text-center mb-4 text-amber-600 drop-shadow-sm"
+    >
+      🍍 菠蘿熊排序遊戲 🍍
+    </h1>
+
+    <!-- 主菜單容器：新版流程中不顯示任何內容，僅作結構及後備使用 -->
+    <div id="mainMenu" class="hidden"></div>
+
+    <!-- 遊戲區：登入及主選單後直接顯示 -->
+    <div id="gameArea">
+      <!-- 任務說明 -->
+      <div class="bg-white rounded-3xl p-6 md:p-8 shadow-lg mb-6">
+        <p
+          id="taskText"
+          class="text-xl md:text-3xl font-bold text-amber-700 text-center"
+        ></p>
+        <p
+          id="levelText"
+          class="text-lg md:text-2xl text-gray-700 text-center mt-3"
+        ></p>
+      </div>
+
+      <!-- 數字區 -->
+      <div
+        id="numbers"
+        class="flex flex-wrap justify-center gap-3 md:gap-4 mb-6"
+      ></div>
+
+      <!-- 格仔區 -->
+      <div class="flex justify-center items-center gap-3 md:gap-6 mb-2 flex-wrap">
+        <div
+          id="slots"
+          class="flex flex-wrap justify-center gap-2 md:gap-3"
+        ></div>
+      </div>
+
+      <!-- 箭咀區 (格仔下方) -->
+      <div
+        class="flex justify-center items-center gap-6 md:gap-8 mb-8"
+      >
+        <div id="arrow1" class="arrow hidden">➡️</div>
+        <div id="arrow2" class="arrow hidden">⬅️</div>
+      </div>
+
+      <!-- 按鈕 -->
+      <div class="flex justify-center gap-3 mb-6 flex-wrap">
+        <button
+          onclick="returnToMenu()"
+          class="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-full shadow-lg transition-all hover:scale-105 text-lg md:text-xl"
+        >
+          🏠 返回菜單
+        </button>
+      </div>
+
+      <!-- 結果顯示 -->
+      <div
+        id="result"
+        class="text-xl md:text-3xl font-bold text-center mb-6"
+      ></div>
+
+      <!-- 寶箱 -->
+      <div id="treasure" class="hidden mb-6">
+        <div id="chest" class="w-40 h-28 mx-auto relative chest">
+          <div
+            class="chest-lid w-40 h-12 bg-gradient-to-b from-yellow-300 to-yellow-400 rounded-t-3xl border-4 border-orange-400 absolute top-0 flex items-center justify-center"
+          >
+            <div
+              class="w-8 h-6 bg-yellow-600 rounded-full border-2 border-yellow-700"
+            ></div>
+          </div>
+          <div
+            class="w-40 h-16 bg-gradient-to-b from-orange-300 to-orange-400 rounded-b-3xl border-4 border-orange-500 absolute bottom-0 flex items-center justify-center"
+          >
+            <div class="text-2xl" id="treasureContent">🎁</div>
+          </div>
+        </div>
+        <p id="outfitName" class="text-lg font-bold text-amber-700 mt-3"></p>
+      </div>
+
+      <!-- 菠蘿熊區域 -->
+      <div
+        class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6"
+      >
+        <!-- 對話框 -->
+        <div
+          class="speech-bubble bg-white rounded-3xl p-4 shadow-lg max-w-xs order-2 md:order-1"
+        >
+          <p id="speech" class="text-lg md:text-2xl">
+            👋 我係菠蘿熊，一齊玩啦！
+          </p>
+        </div>
+
+        <!-- 菠蘿熊 -->
+        <div class="relative w-44 h-52 order-1 md:order-2">
+          <svg viewBox="0 0 200 240" class="w-full h-full">
+            <!-- 熊頭 (棕色) -->
+            <circle cx="100" cy="85" r="55" fill="#8b6f47"></circle>
+            <!-- 左耳 (棕色) -->
+            <circle cx="55" cy="35" r="18" fill="#8b6f47"></circle>
+            <!-- 右耳 (棕色) -->
+            <circle cx="145" cy="35" r="18" fill="#8b6f47"></circle>
+            <!-- 左耳內 (淺棕色) -->
+            <circle cx="55" cy="38" r="10" fill="#a0826d"></circle>
+            <!-- 右耳內 (淺棕色) -->
+            <circle cx="145" cy="38" r="10" fill="#a0826d"></circle>
+            <!-- 臉部底色 (淡棕色) -->
+            <circle cx="100" cy="95" r="45" fill="#a0826d"></circle>
+            <!-- 左眼眶 (深棕色) -->
+            <circle cx="75" cy="75" r="16" fill="#6b5640"></circle>
+            <!-- 右眼眶 (深棕色) -->
+            <circle cx="125" cy="75" r="16" fill="#6b5640"></circle>
+            <!-- 左眼白 -->
+            <ellipse cx="75" cy="77" rx="10" ry="12" fill="white"></ellipse>
+            <!-- 右眼白 -->
+            <ellipse cx="125" cy="77" rx="10" ry="12" fill="white"></ellipse>
+            <!-- 左眼瞳 -->
+            <circle cx="77" cy="80" r="6" fill="#2c3e50"></circle>
+            <!-- 右眼瞳 -->
+            <circle cx="123" cy="80" r="6" fill="#2c3e50"></circle>
+            <!-- 左眼光澤 -->
+            <circle cx="79" cy="77" r="2.5" fill="white"></circle>
+            <!-- 右眼光澤 -->
+            <circle cx="125" cy="77" r="2.5" fill="white"></circle>
+            <!-- 鼻子 (黑色) -->
+            <ellipse cx="100" cy="100" rx="10" ry="12" fill="#2c3e50"></ellipse>
+            <!-- 鼻孔 -->
+            <circle cx="96" cy="101" r="2" fill="black"></circle>
+            <circle cx="104" cy="101" r="2" fill="black"></circle>
+            <!-- 嘴巴 (開心笑容) -->
+            <path
+              d="M 88 115 Q 100 122 112 115"
+              stroke="#2c3e50"
+              stroke-width="2"
+              fill="none"
+              stroke-linecap="round"
+            ></path>
+            <!-- 舌頭 -->
+            <ellipse cx="100" cy="120" rx="8" ry="5" fill="#ff6b9d"></ellipse>
+            <!-- 左臉頰 (紅潤) -->
+            <ellipse
+              cx="50"
+              cy="95"
+              rx="15"
+              ry="18"
+              fill="#ffb3ba"
+              opacity="0.6"
+            ></ellipse>
+            <!-- 右臉頰 (紅潤) -->
+            <ellipse
+              cx="150"
+              cy="95"
+              rx="15"
+              ry="18"
+              fill="#ffb3ba"
+              opacity="0.6"
+            ></ellipse>
+          </svg>
+          <div
+            id="outfitLayer"
+            class="absolute inset-0 flex items-center justify-center pointer-events-none"
+          ></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 勝利模態 -->
+  <div id="victoryModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <p class="text-4xl md:text-5xl font-bold text-green-600 mb-6">
+        🎉 做得好！
+      </p>
+      <button
+        onclick="closeVictoryModal()"
+        class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-full text-xl"
+      >
+        繼續玩 🎮
+      </button>
+    </div>
+  </div>
+
+  <script src="game_script.js"></script>
+</body>
+</html>

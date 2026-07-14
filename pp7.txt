@@ -1,0 +1,27 @@
+<style>
+  .front {
+    transition:
+      transform
+      600ms
+      cubic-bezier(.3, .7, .4, 1);
+  }
+
+  .pushable:hover .front {
+    transform: translateY(-6px);
+    transition:
+      transform
+      250ms
+      cubic-bezier(.3, .7, .4, 1.5);
+  }
+
+  .pushable:active .front {
+    transform: translateY(-2px);
+    transition: transform 34ms;
+  }
+</style>
+
+<button class="pushable">
+  <span class="front">
+    Push me
+  </span>
+</button>

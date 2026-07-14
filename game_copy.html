@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>菠蘿熊排序遊戲 - 2.5D 叢林背景</title>
+  <link rel="stylesheet" href="./game_style.css" />
+  <!-- 使用 Tailwind CDN 以支援原本的樣式類別 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <!-- 2.5D Jungle Canvas Background -->
+    <canvas id="gameCanvas"></canvas>
+
+  <!-- Pineapple Bear Image -->
+  <img
+    id="pineappleBearImage"
+    src="./pineapple_bear.png"
+    alt="菠蘿熊圖片"
+    style="position: fixed; top: 45%; left: 7.5%; transform: scale(0.15); transform-origin: top left; pointer-events: none;"
+  />
+
+  <!-- Top-left slide-out menu arrow -->
+  <button
+    id="menuArrow"
+    class="menu-arrow pineapple-box"
+    onclick="returnToMenu()"
+    type="button"
+  >
+    <span class="menu-arrow-tip">
+      ↩
+    </span>
+    <span class="menu-arrow-label">
+      🏠 返回菜單
+    </span>
+  </button>
+    <div id="gameShell" class="game-shell max-w-3xl mx-auto">
+        <!-- 頂部標題列 -->
+    <header class="game-header">
+      <h1
+        id="gameTitle"
+        class="text-2xl md:text-4xl font-bold text-center text-amber-600 drop-shadow-sm"
+      >
+        🍍 菠蘿熊排序遊戲 🍍
+      </h1>
+      <span
+        class="mx-4 text-2xl md:text-4xl font-bold text-amber-600 drop-shadow-sm"
+      >
+        |
+      </span>
+            <span
+        id="orderInfo"
+        class="text-xl md:text-2xl font-bold text-amber-600 drop-shadow-sm"
+      ></span>
+      <span
+        class="mx-4 text-2xl md:text-4xl font-bold text-amber-600 drop-shadow-sm"
+      >
+        |
+      </span>
+            <span
+        id="difficultyInfo"
+        class="text-xl md:text-2xl font-bold text-amber-600 drop-shadow-sm"
+      ></span>
+    </header>
+
+    <!-- 主菜單容器：新版流程中不顯示任何內容，僅作結構及後備使用 -->
+    <div id="mainMenu" class="hidden"></div>
+
+    <!-- 遊戲區：登入及主選單後直接顯示 -->
+    <div id="gameArea">
+
+
+      <!-- 數字區 -->
+      <div
+        id="numbers"
+        class="flex flex-wrap justify-center gap-3 md:gap-4 mb-6"
+      ></div>
+
+      <!-- 格仔區 -->
+      <div class="flex justify-center items-center gap-3 md:gap-6 mb-2 flex-wrap">
+        <div
+          id="slots"
+          class="flex flex-wrap justify-center gap-2 md:gap-3"
+        ></div>
+      </div>
+
+            <!-- 結果顯示 -->
+
+      <div
+        id="result"
+        class="text-xl md:text-3xl font-bold text-center mb-6"
+      ></div>
+
+      <!-- 寶箱 -->
+      <div id="treasure" class="hidden mb-6">
+        <div id="chest" class="w-40 h-28 mx-auto relative chest">
+          <div
+            class="chest-lid w-40 h-12 bg-gradient-to-b from-yellow-300 to-yellow-400 rounded-t-3xl border-4 border-orange-400 absolute top-0 flex items-center justify-center"
+          >
+            <div
+              class="w-8 h-6 bg-yellow-600 rounded-full border-2 border-yellow-700"
+            ></div>
+          </div>
+          <div
+            class="w-40 h-16 bg-gradient-to-b from-orange-300 to-orange-400 rounded-b-3xl border-4 border-orange-500 absolute bottom-0 flex items-center justify-center"
+          >
+            <div class="text-2xl" id="treasureContent">🎁</div>
+          </div>
+        </div>
+        <p id="outfitName" class="text-lg font-bold text-amber-700 mt-3"></p>
+      </div>
+
+      <div
+        class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6"
+      >
+        <!-- 對話框 -->
+        <div
+          class="speech-bubble rounded-3xl p-4 shadow-lg max-w-xs order-2 md:order-1"
+        >
+          <p id="speech" class="text-lg md:text-xl">
+            
+          </p>
+        </div>
+    </div>
+  </div>
+
+  <!-- 勝利模態 -->
+  <div id="victoryModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <p class="text-4xl md:text-5xl font-bold text-green-600 mb-6">
+        🎉 做得好！
+      </p>
+      <button
+        onclick="closeVictoryModal()"
+        class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-full text-xl"
+      >
+        繼續玩 🎮
+      </button>
+    </div>
+  </div>
+
+  <script src="game_script.js"></script>
+</body>
+</html>
