@@ -960,13 +960,13 @@ function startMenuDialogSystem() {
         {
       type: "Text",
       Speaker: "菠蘿熊",
-      Content: "水果熊朋友，您好呀！\n\n我是菠蘿熊，歡迎您來到這裏。",
+      Content: "水果熊朋友，你好呀！\n\n我是菠蘿熊，歡迎你來到這裏。",
       Event: "playNextPageSound",
     },
     /*{
       type: "Text",
       Speaker: "菠蘿島-啊波",
-      Content: "聽村長說，您主動來幫忙趕走數字魔王，真的感謝您！",
+      Content: "聽村長說，你主動來幫忙趕走數字魔王，真的感謝你！",
       Event: "playNextPageSound",
     },
     {
@@ -984,7 +984,7 @@ function startMenuDialogSystem() {
     {
       type: "Text",
       Speaker: "菠蘿島-啊波",
-      Content: "我們導游又不懂數學，小兄弟您能試一試嗎？",
+      Content: "我們導游又不懂數學，小兄弟你能試一試嗎？",
       Event: "playNextPageSound",
     },*/
     {
@@ -1001,7 +1001,7 @@ function startMenuDialogSystem() {
     },
     {
       type: "Choice",
-      Question: "揀一個難度吧~",
+      Question: "選擇一個難度吧~",
       AnswerNo: 2,
       AnswerArr: ["⭐ 1-10", "⭐⭐ 1-20"],
     },

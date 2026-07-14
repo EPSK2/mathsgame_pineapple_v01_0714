@@ -2182,7 +2182,7 @@ function startGame(difficulty) {
 
   updateStumpsLayout();
 
-  setSpeech("👋 請依序拖拉數字至空格 😊");
+  setSpeech("👋 請依序拉數字到空格 😊");
   updateBottomModeArrowLayout();
   updateBottomModeArrowDirection();
 }
