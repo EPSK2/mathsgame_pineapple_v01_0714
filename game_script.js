@@ -2182,7 +2182,7 @@ function startGame(difficulty) {
 
   updateStumpsLayout();
 
-  setSpeech("👋 依序拖拉數字到格仔啦！");
+  setSpeech("👋 請依序拖拉數字至空格 😊");
   updateBottomModeArrowLayout();
   updateBottomModeArrowDirection();
 }
@@ -2565,7 +2565,7 @@ function handlePointerUpOnNumber(e) {
         ? gameState.nextIndex
         : 4 - gameState.nextIndex;
     if (slotIndex !== expectedSlotIndex) {
-      setSpeech("要依序填答案呀！");
+      setSpeech("要依序填答案喔！");
       playAudioById('sfxPlaceWrong');
       playSlotErrorAnimation(highlightedSlot, 500);
 
@@ -2575,7 +2575,7 @@ function handlePointerUpOnNumber(e) {
       }
     } else if (highlightedSlot.textContent.trim() !== "") {
       playAudioById('sfxPlaceWrong');
-      setSpeech("呢個格仔已經有數字啦！");
+      setSpeech("這個空格已經有數字啦！");
     } else {
       setSlotValue(
         highlightedSlot,
@@ -2845,7 +2845,7 @@ function handleDrop(e) {
       : 4 - gameState.nextIndex;
 
     if (slotIndex !== expectedSlotIndex) {
-      setSpeech("要依序填答案呀！");
+      setSpeech("請依序填答案 💪");
       playAudioById('sfxPlaceWrong');
       playSlotErrorAnimation(slot, 500);
     
@@ -2858,7 +2858,7 @@ function handleDrop(e) {
 
 
   if (slot.textContent.trim() !== "") {
-    setSpeech("呢個格仔已經有數字啦！");
+    setSpeech("這個空格已經有數字啦！");
     return;
   }
 
@@ -2905,7 +2905,7 @@ function checkDigitRealTime(slot, value) {
   const isValid = validatePlacement(index, numericValue);
 
   if (!isValid) {
-    setSpeech("要依序填答案呀！");
+    setSpeech("請依序填答案 💪");
     playAudioById('sfxPlaceWrong');
     playSlotErrorAnimation(slot, 500);
 
@@ -2928,7 +2928,7 @@ function checkDigitRealTime(slot, value) {
 
       slot._sourceTile = null;
 
-      setSpeech("👋 再試一次啦！");
+      setSpeech("再試一次 💪");
       updateGateOverlays();
       updateCubesProgression();
     }, animationDurationMs);
@@ -2937,7 +2937,7 @@ function checkDigitRealTime(slot, value) {
 
 
 
-    setSpeech("👍 好嘢！繼續加油！");
+    setSpeech("👍 非常好！繼續加油！");
 
     // On success, permanently remove the source number tile so it
     // does not reappear in the pool.
@@ -3046,9 +3046,9 @@ function checkDigitRealTime(slot, value) {
 function completeGame() {
   if (result) {
     result.innerHTML =
-      '<span class="text-3xl text-green-600">🎉 做得好！</span>';
+      '<span class="text-3xl text-green-600">🎉 任務完成！</span>';
   }
-  setSpeech("👍 好嘢！");
+  setSpeech("😄 恭喜！");
 
   document.querySelectorAll(".num").forEach((num) => {
     num.style.pointerEvents = "none";
@@ -3146,7 +3146,7 @@ function handleTouchEnd(e) {
         : 4 - gameState.nextIndex;
 
                 if (slotIndex !== expectedSlotIndex) {
-      setSpeech("要依序填答案呀！");
+      setSpeech("請依序填答案 💪");
       playSlotErrorAnimation(highlightedSlot, 500);
 
       if (gameState.draggedElement) {
@@ -3154,7 +3154,7 @@ function handleTouchEnd(e) {
       }
     } else if (highlightedSlot.textContent.trim() !== "") {
 
-      setSpeech("呢個格仔已經有數字啦！");
+      setSpeech("這個空格已經有數字啦！");
     } else {
       setSlotValue(highlightedSlot, gameState.draggedValue, gameState.draggedElement);
     }

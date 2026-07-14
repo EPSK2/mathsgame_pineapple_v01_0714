@@ -959,8 +959,8 @@ function startMenuDialogSystem() {
   const introDialogScript = [
         {
       type: "Text",
-      Speaker: "菠蘿島-啊波",
-      Content: "水果熊朋友，您好呀！\n\n我叫啊波，是菠蘿島的小導游，歡迎您來到這裏。",
+      Speaker: "菠蘿熊",
+      Content: "水果熊朋友，您好呀！\n\n我是菠蘿熊，歡迎您來到這裏。",
       Event: "playNextPageSound",
     },
     /*{
@@ -1001,13 +1001,13 @@ function startMenuDialogSystem() {
     },
     {
       type: "Choice",
-      Question: "揀一個難度啦~",
+      Question: "揀一個難度吧~",
       AnswerNo: 2,
       AnswerArr: ["⭐ 1-10", "⭐⭐ 1-20"],
     },
     {
       type: "TextFinal",
-      Speaker: "菠蘿島-啊波",
+      Speaker: "菠蘿熊",
       Content: "水果熊，準備好了嗎？挑戰要開始啦！",
       Event: "playNextPageSound",
     },
