@@ -1027,7 +1027,7 @@ document.addEventListener("dialogChoiceSelected", (event) => {
   const { node, answerIndex, answerText } = detail;
 
     if (node.type === "Choice" && typeof node.Question === "string") {
-    if (node.Question.includes("任務内容")) {
+    if (node.Question.includes("任務內容")) {
       // Tutorial: user wants to hear about the task instructions
       if (answerIndex === 0 && typeof openTutorial === "function") {
         openTutorial();
