@@ -2845,7 +2845,7 @@ function handleDrop(e) {
       : 4 - gameState.nextIndex;
 
     if (slotIndex !== expectedSlotIndex) {
-      setSpeech("請依序填答案 💪");
+      setSpeech("請依序填答案。目標空格不在這裏喔！ 💪");
       playAudioById('sfxPlaceWrong');
       playSlotErrorAnimation(slot, 500);
     
