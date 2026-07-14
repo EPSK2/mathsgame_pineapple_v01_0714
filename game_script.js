@@ -2565,7 +2565,7 @@ function handlePointerUpOnNumber(e) {
         ? gameState.nextIndex
         : 4 - gameState.nextIndex;
     if (slotIndex !== expectedSlotIndex) {
-      setSpeech("要依序填答案喔！");
+      setSpeech("請依序填答案 💪");
       playAudioById('sfxPlaceWrong');
       playSlotErrorAnimation(highlightedSlot, 500);
 
