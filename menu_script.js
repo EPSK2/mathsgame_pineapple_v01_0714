@@ -963,13 +963,13 @@ function startMenuDialogSystem() {
       Content: "水果熊朋友，您好呀！\n\n我叫啊波，是菠蘿島的小導游，歡迎您來到這裏。",
       Event: "playNextPageSound",
     },
-    {
+    /*{
       type: "Text",
       Speaker: "菠蘿島-啊波",
       Content: "聽村長說，您主動來幫忙趕走數字魔王，真的感謝您！",
       Event: "playNextPageSound",
     },
-    /*{
+    {
       type: "Text",
       Speaker: "菠蘿島-啊波",
       Content: "容許我講講背景：\n\n我們島下一周就會舉辦菠蘿節，\n農夫伯伯會分享香甜菠蘿給大家吃！",
@@ -995,7 +995,7 @@ function startMenuDialogSystem() {
     },
     {
       type: "Choice",
-      Question: "你想點樣排序呢？",
+      Question: "你想怎樣排序呢？",
       AnswerNo: 2,
       AnswerArr: ["小 → 大", "大 → 小"],
     },
@@ -1008,7 +1008,7 @@ function startMenuDialogSystem() {
     {
       type: "TextFinal",
       Speaker: "菠蘿島-啊波",
-      Content: "好，水果熊，準備好了，挑戰開始！",
+      Content: "水果熊，準備好了嗎？挑戰要開始啦！",
       Event: "playNextPageSound",
     },
   ];
@@ -1032,7 +1032,7 @@ document.addEventListener("dialogChoiceSelected", (event) => {
       if (answerIndex === 0 && typeof openTutorial === "function") {
         openTutorial();
       }
-    } else if (node.Question.includes("點樣排序")) {
+    } else if (node.Question.includes("怎樣排序")) {
       // Mode selection
       menuConfig.mode = answerIndex === 0 ? "ascending" : "descending";
     } else if (node.Question.includes("難度")) {
