@@ -576,7 +576,7 @@ const tutorialPages = [
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
       <img style="width: 700px; height: auto;" src="ins01.png">
       <div class="text-4xl leading-tight text-gray-700 whitespace-pre-line">
-        遊戲場地内有 <b>5</b> 朵雲，寫著不同的數字。
+        遊戲場地內有 <b>5</b> 朵雲，印著不同的數字。
       </div>
     </div>
   `,
@@ -585,7 +585,7 @@ const tutorialPages = [
       <img style="width: 700px; height: auto;" src="ins02.png">
       <div class="text-4xl leading-relaxed text-gray-700 whitespace-pre-line">
         如果箭頭指向 <span class="text-6xl">右 ➡➡➡</span>，
-        就需要把數字從從 <span class="text-2xl">小</span> 到 <span class="text-6xl">大</span> 排列。
+        就需要把數字從從 <span class="text-3xl">小</span> 到 <span class="text-6xl">大</span> 排列。
       </div>
     </div>
   `,
@@ -594,14 +594,14 @@ const tutorialPages = [
       <img style="width: 700px; height: auto;" src="ins03.png">
       <div class="text-4xl leading-relaxed text-gray-700 whitespace-pre-line">
         如果箭頭指向 <span class="text-6xl">左 ⬅⬅⬅</span>，
-        就需要把數字從從 <span class="text-6xl">大</span> 到 <span class="text-2xl">小</span> 排列。
+        就需要把數字從從 <span class="text-6xl">大</span> 到 <span class="text-3xl">小</span> 排列。
       </div>
     </div>
   `,
   `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.1rem;">
       <video src="ins04.webm" muted loop autoplay style="width: 50%;"></video>
-      <div class="text-4xl leading-relaxed text-gray-700 whitespace-pre-line">用手指/滑鼠按緊雲朵，一一拉到正確空格上！</div>
+      <div class="text-4xl leading-relaxed text-gray-700 whitespace-pre-line">用手指/滑鼠按緊雲朵，拉動，再放到正確位置上！</div>
     </div>
   `,
 ];
