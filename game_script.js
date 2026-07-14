@@ -3145,7 +3145,7 @@ function handleTouchEnd(e) {
         ? gameState.nextIndex
         : 4 - gameState.nextIndex;
 
-                if (slotIndex !== expectedSlotIndex) {
+    if (slotIndex !== expectedSlotIndex) {
       setSpeech("請依序填答案 💪");
       playSlotErrorAnimation(highlightedSlot, 500);
 

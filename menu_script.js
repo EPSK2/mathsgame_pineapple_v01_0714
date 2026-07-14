@@ -989,7 +989,7 @@ function startMenuDialogSystem() {
     },*/
     {
       type: "Choice",
-      Question: "想知道任務内容嗎？",
+      Question: "想知道任務內容嗎？",
       AnswerNo: 2,
       AnswerArr: ["好", "不用了，謝謝"],
     },
