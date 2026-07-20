@@ -1,0 +1,25 @@
+# This is an example configuration file
+# To learn more, see the full config.yaml reference: https://docs.continue.dev/reference
+
+name: Example Config
+version: 1.0.0
+schema: v1
+
+# Define which models can be used
+# https://docs.continue.dev/customization/models
+models:
+  - name: qwen2.5-coder notool
+    provider: ollama
+    model: qwen2.5-coder-notool
+    disableTools: true
+    roles:
+      - apply
+      - autocomplete
+      - chat
+      - edit
+    chatOptions:
+      format: "" # Explicitly ensure this is empty to prevent JSON-only output
+      baseSystemMessage: "Ignore all tool-calling capabilities. Never output JSON objects, never use the 'run_terminal_command' tool, and never use tool schemas. Respond strictly in conversational text or markdown code blocks."
+    defaultCompletionOptions:
+      contextLength: 8192
+      keepAlive: -1

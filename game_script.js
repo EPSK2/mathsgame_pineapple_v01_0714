@@ -49,8 +49,7 @@ function drawSignVideo() {
   } else {
     ctx.drawImage(signVideo, 0, -drawHeight, drawWidth, drawHeight);
   }
-  // Draw so that the bottom-left corner of the scaled video sits at the origin
-
+  // Draw so that the bottom-left corner of the scaled video sits at the orig
   ctx.restore();
 }
 
@@ -66,7 +65,7 @@ resizeCanvas();
 window.addEventListener("resize", () => {
   resizeCanvas();
   initTrees();
-  initCrates();
+    initCrates();
   initParticles();
   if (typeof sunshineEffect !== "undefined" && sunshineEffect) {
     sunshineEffect.handleResize();
@@ -74,7 +73,10 @@ window.addEventListener("resize", () => {
   updateStumpsLayout();
   updateNumberTilePositions();
   updateBottomModeArrowLayout();
+  updateDescendingHintLayout();
+  updateAllSuccessSlotCloudLayouts();
 });
+
 
 
 // Image assets
@@ -89,7 +91,7 @@ const images = {
 };
 
 // Use provided assets
-images.jungleBg.src = "./grass.png";
+images.jungleBg.src = "./grass_02.png"; //"https://wallpaperaccess.com/full/4990824.png";
 images.tree.src = "./tree.png";
 images.leaf.src = "./leaf.png";
 images.tallTree.src = "./tall_tree.png";
@@ -123,10 +125,10 @@ const layers = {
 const crateConfig = {
   count: 5,
   scale: 0.2,
-  minXRatio: 0.55,
-  maxXRatio: 0.95,
+  minXRatio: 0.25,
+  maxXRatio: 0.8,
   minYRatio: 0.2,
-  maxYRatio: 0.75,
+  maxYRatio: 0.6,
   minGap: 5,
 };
 
@@ -151,6 +153,124 @@ const animations = [];
 
 // Persistent slot success clouds (one per correctly filled slot).
 const successSlotClouds = [];
+
+const SUCCESS_CLOUD_FALLBACK_VH = 30;
+
+function getCloudYellowAspectRatio() {
+  if (
+    images.crate &&
+    images.crate.complete &&
+    images.crate.naturalWidth > 0 &&
+    images.crate.naturalHeight > 0
+  ) {
+    return images.crate.naturalWidth / images.crate.naturalHeight;
+  }
+  // Fallback based on previously documented dimensions ratio: 0.26 : 0.225
+  return 0.26 / 0.225;
+}
+
+function getSuccessCloudAspectRatio() {
+  return getCloudYellowAspectRatio();
+}
+
+function getSuccessCloudSizeFromWrapper(wrapper) {
+  const aspectRatio = getSuccessCloudAspectRatio();
+  const wrapperRect = wrapper ? wrapper.getBoundingClientRect() : null;
+  let height = wrapperRect && wrapperRect.height ? wrapperRect.height : 0;
+  if (!height || !isFinite(height)) {
+    const viewportHeight = window.innerHeight || (canvas ? canvas.height : 0) || 800;
+    height = viewportHeight * (SUCCESS_CLOUD_FALLBACK_VH / 100);
+  }
+
+  let width = wrapperRect && wrapperRect.width ? wrapperRect.width : 0;
+  if (!width || !isFinite(width)) {
+    width = height * aspectRatio;
+  }
+
+  return {
+    width,
+    height,
+  };
+}
+
+function updateSuccessCloudLayout(record) {
+  if (!record || !record.wrapper || !record.layer || !record.layer.isConnected) {
+    return;
+  }
+
+  const size = getSuccessCloudSizeFromWrapper(record.wrapper);
+  record.layer.style.setProperty("--success-cloud-width", `${size.width}px`);
+  record.layer.style.setProperty("--success-cloud-height", `${size.height}px`);
+}
+
+function updateAllSuccessSlotCloudLayouts() {
+  successSlotClouds.forEach((record) => {
+    updateSuccessCloudLayout(record);
+  });
+}
+
+function clearSuccessSlotClouds() {
+  successSlotClouds.forEach((record) => {
+    if (record && record.layer && record.layer.parentNode) {
+      record.layer.parentNode.removeChild(record.layer);
+    }
+  });
+  successSlotClouds.length = 0;
+}
+
+function createSuccessSlotCloud(wrapper, value) {
+  if (!wrapper) return;
+
+  const oldLayer = wrapper.querySelector(".slot-success-layer");
+  if (oldLayer && oldLayer.parentNode) {
+    oldLayer.parentNode.removeChild(oldLayer);
+  }
+
+  const layer = document.createElement("div");
+  layer.className = "slot-success-layer";
+
+  const rainbow = document.createElement("div");
+  rainbow.className = "slot-success-rainbow";
+  rainbow.innerHTML = `
+    <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <path d="M 36 176 A 124 124 0 0 1 284 176" fill="none" stroke="#FF0000" stroke-width="14" stroke-linecap="round"></path>
+      <path d="M 50 176 A 110 110 0 0 1 270 176" fill="none" stroke="#FF7F00" stroke-width="12" stroke-linecap="round"></path>
+      <path d="M 62 176 A 98 98 0 0 1 258 176" fill="none" stroke="#FFFF00" stroke-width="11" stroke-linecap="round"></path>
+      <path d="M 73 176 A 87 87 0 0 1 247 176" fill="none" stroke="#00FF00" stroke-width="10" stroke-linecap="round"></path>
+      <path d="M 83 176 A 77 77 0 0 1 237 176" fill="none" stroke="#0000FF" stroke-width="9" stroke-linecap="round"></path>
+      <path d="M 92 176 A 68 68 0 0 1 228 176" fill="none" stroke="#4B0082" stroke-width="8" stroke-linecap="round"></path>
+      <path d="M 100 176 A 60 60 0 0 1 220 176" fill="none" stroke="#9400D3" stroke-width="7" stroke-linecap="round"></path>
+    </svg>
+  `;
+
+  const cloudImg = document.createElement("img");
+  cloudImg.className = "slot-success-cloud-image";
+  cloudImg.src = images.crate ? images.crate.src : "./cloud_yellow.png";
+  cloudImg.alt = "Success cloud";
+
+  const label = document.createElement("div");
+  label.className = "slot-success-cloud-label";
+  label.textContent = String(value);
+
+  layer.appendChild(rainbow);
+  layer.appendChild(cloudImg);
+  layer.appendChild(label);
+  wrapper.appendChild(layer);
+
+  const record = {
+    wrapper,
+    layer,
+  };
+
+  successSlotClouds.push(record);
+  updateSuccessCloudLayout(record);
+
+  requestAnimationFrame(() => {
+    if (layer.isConnected) {
+      layer.classList.add("show");
+    }
+  });
+}
 
 // Global toggle for smoke / success cloud animations.
 // Set to false to completely hide smoke effects while keeping checkmarks.
@@ -276,25 +396,9 @@ function playSuccessEffect(x, y, number, restOffset, checkX, checkY) {
   const pineappleRestY = smokeCenterY - offsetForPosition;
   pineapplePositions.push({ x: smokeCenterX, y: pineappleRestY });
 
-  // (Pineapple hop animation removed; success now only shows smoke and a checkmark.)
-
-  // 3) Green checkmark, fading in at stump bottom-right
-
-  const fallbackOffsetX = 30;
-  const fallbackOffsetY = -30;
-  const checkPosX =
-    typeof checkX === "number" ? checkX : x + fallbackOffsetX;
-  const checkPosY =
-    typeof checkY === "number" ? checkY : y + fallbackOffsetY;
-
-  animations.push({
-    type: "checkmark",
-    x: checkPosX,
-    y: checkPosY,
-    startTime: now,
-    duration: 3000, // fade-in over 3 seconds
-  });
+    // (Pineapple hop animation removed; success now只 shows smoke clouds.)
 }
+
 
 
 
@@ -309,134 +413,6 @@ function playSuccessEffect(x, y, number, restOffset, checkX, checkY) {
 function updateAndDrawAnimations(timeMs, dtSeconds) {
   if (!ctx) return;
 
-    // First, draw any persistent success clouds so that
-  // smoke and checkmarks render above them.
-    if (
-    successSlotClouds.length &&
-    images.crate &&
-    images.crate.complete
-  ) {
-
-    const img = images.crate;
-    const baseScale = (crateConfig && crateConfig.scale)
-      ? crateConfig.scale * 1.7
-      : 0.4; // approximate visual scale of numbered clouds
-    const baseWidth = img.naturalWidth * baseScale;
-    const baseHeight = img.naturalHeight * baseScale;
-
-    successSlotClouds.forEach((cloud) => {
-      const elapsed = timeMs - cloud.startTime;
-      const duration = cloud.duration || 800;
-      const t = Math.max(0, Math.min(elapsed / duration, 1));
-
-      // Simple "bounce" scale: ease out with a small overshoot.
-      let scaleFactor;
-      if (t < 1) {
-        const easeOut = 1 - Math.pow(1 - t, 3); // cubic ease-out
-        const overshoot = 1.2;
-        const settle = 0.9;
-        // Blend between settle and overshoot with a sinusoidal wobble.
-        scaleFactor =
-          settle +
-          (overshoot - settle) * Math.sin(easeOut * Math.PI);
-      } else {
-        scaleFactor = 0.9;
-      }
-
-      const drawWidth = baseWidth * scaleFactor;
-      const drawHeight = baseHeight * scaleFactor;
-
-            ctx.save();
-      ctx.translate(cloud.x, cloud.y);
-
-      // Draw rainbow arcs behind the numbered cloud.
-      const rainbowColors = [
-        "#FF0000",
-        "#FF7F00",
-        "#FFFF00",
-        "#00FF00",
-        "#0000FF",
-        "#4B0082",
-        "#9400D3",
-      ];
-      const baseInnerRadius = 50;
-      const bandGap = 4;
-
-      // Slight ease-out scale for the rainbow so it grows in with the cloud.
-      let rainbowScale;
-      if (t < 1) {
-        const rainbowEase = 1 - Math.pow(1 - t, 3);
-        rainbowScale = rainbowEase;
-      } else {
-        rainbowScale = 1;
-      }
-
-      const startAngle = 1.25 * Math.PI; // 180 degrees
-      const endAngle = 2 * Math.PI;
-
-      const rainbowYOffset = -40; // negative = above the cloud
-      const rainbowXOffset = -40;
-      rainbowColors.forEach((color, index) => {
-        // Outer band = red, inner band = violet.
-        const bandIndex = rainbowColors.length - 1 - index;
-        const fullRadius = baseInnerRadius + bandIndex * bandGap;
-        const radius = fullRadius * rainbowScale;
-
-        // Soft outer pass for a glow.
-        ctx.save();
-        ctx.lineWidth = 16;
-        ctx.strokeStyle = color;
-        ctx.globalAlpha = 0.2;
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 4;
-        ctx.beginPath();
-        ctx.arc(rainbowXOffset, rainbowYOffset, radius, startAngle, endAngle, false);
-        ctx.stroke();
-        ctx.restore();
-
-        // Crisper inner pass.
-        ctx.save();
-        ctx.lineWidth = 8;
-        ctx.strokeStyle = color;
-        ctx.globalAlpha = 1;
-        ctx.shadowColor = "transparent";
-        ctx.shadowBlur = 0;
-        ctx.beginPath();
-        // Use the same vertical offset as the glow so we only draw
-        // a single rainbow arch above the numbered cloud.
-        ctx.arc(rainbowXOffset, rainbowYOffset, radius, startAngle, endAngle, false);
-        ctx.stroke();
-        ctx.restore();
-      });
-
-      // Draw numbered cloud on top of the rainbow.
-      ctx.drawImage(
-        img,
-        -drawWidth / 2,
-        -drawHeight / 2,
-        drawWidth,
-        drawHeight
-      );
-
-      // Draw the numeric label centred on the cloud so this
-      // appears as the "numbered cloud" popping into place.
-      if (cloud.value != null) {
-        const valueText = String(cloud.value);
-        const digitCount = valueText.length;
-        const labelFontSize = digitCount >= 2 ? 44 : 60;
-        ctx.font = `${labelFontSize}px 'Comic Sans MS', 'Noto Sans TC', sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "#6f4e37";
-        ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
-        ctx.shadowBlur = 4;
-        ctx.fillText(valueText, 0, 20);
-      }
-
-      ctx.restore();
-
-    });
-  }
 
 
   for (let i = animations.length - 1; i >= 0; i--) {
@@ -500,7 +476,7 @@ function updateAndDrawAnimations(timeMs, dtSeconds) {
       );
       ctx.restore();
 
-                } else if (anim.type === "pineapple") {
+                                } else if (anim.type === "pineapple") {
       // --- Pineapple hop, then rest at 20% stump height ---
       if (!canvas || !anim.elem) {
         // Failsafe: if canvas or DOM element is missing, drop this animation.
@@ -560,31 +536,10 @@ function updateAndDrawAnimations(timeMs, dtSeconds) {
       anim.elem.style.left = "0px";
       anim.elem.style.top = "0px";
       anim.elem.style.transform = `translate(${pageX}px, ${pageY}px) translate(-50%, -100%) scale(${scale})`;
-
-
-
-        } else if (anim.type === "checkmark") {
-      // --- Green checkmark with 3s fade-in ---
-      const elapsed = anim.startTime ? timeMs - anim.startTime : 0;
-      let alpha = 1;
-      if (anim.duration) {
-        const t = Math.max(0, Math.min(elapsed / anim.duration, 1));
-        alpha = t; // fade in from 0 to 1
-      }
-
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.font = "40px system-ui, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillStyle = "#22c55e"; // green
-      ctx.shadowColor = "black";
-      ctx.shadowBlur = 4;
-      ctx.fillText("✅", anim.x, anim.y);
-      ctx.restore();
     }
   }
 }
+
 
 
 
@@ -646,13 +601,14 @@ function initTrees() {
     const tallHeight = desiredHeight;
 
     // Left tree: bottom center aligned with bottom-left corner (0, canvas.height)
-    layers.sideTrees.left = {
+    /*layers.sideTrees.left = {
       x: -tallWidth / 2,
       y: canvas.height - tallHeight,
       width: tallWidth,
       height: tallHeight,
-    };
-
+    };*/
+    
+    layers.sideTrees.left = null;
     // Right tree: bottom center aligned with bottom-right corner (canvas.width, canvas.height)
     /*layers.sideTrees.right = {
       x: canvas.width - tallWidth / 2,
@@ -729,8 +685,10 @@ function drawCrates() {
   if (!ctx || !images.crate.complete || !crates.length) return;
 
   const img = images.crate;
-  const drawWidth = img.naturalWidth * crateConfig.scale;
-  const drawHeight = img.naturalHeight * crateConfig.scale;
+  const cloudAspectRatio = getCloudYellowAspectRatio();
+  const baseSize = Math.min(window.screen.availWidth, window.screen.availHeight) * 0.05;
+  const drawWidth = baseSize; // img.naturalWidth * crateConfig.scale;
+  const drawHeight = drawWidth / cloudAspectRatio;
 
   ctx.save();
   crates.forEach((crate) => {
@@ -1861,14 +1819,16 @@ function updateStumpsLayout() {
   }
 
 
-    // Apply progression-based scaling and coloring after layout
+        // Apply progression-based scaling and coloring after layout
   updateCubesProgression();
 
   // Update DOM-based mode arrow drawn on top of stumps.
   updateDomModeArrow();
   updateBottomModeArrowLayout();
   updateBottomModeArrowDirection();
+  ensureDescendingHint();
 }
+
 
 
 
@@ -1888,7 +1848,190 @@ let gameState = {
   draggedElement: null,
 };
 
+// Hidden multi-level run state (三個關卡一輪，學生看不到等級指示)
+const LEVELS_PER_RUN = 1;
+const ATTEMPT_COOKIE_NAME = "pb_sort_attempt";
+let runState = {
+  modeKey: null,
+  attemptId: null,
+  currentLevelIndex: 1,
+  levelsCompleted: 0,
+  totalElapsedMs: 0,
+  currentLevelStartTs: null,
+  status: "idle", // "running" | "paused" | "complete"
+};
+
+function buildModeKey(mode, difficulty) {
+  return String(mode || "") + "_" + String(difficulty || "");
+}
+
+function generateAttemptId() {
+  return (
+    Date.now().toString(36) +
+    "-" +
+    Math.random().toString(36).slice(2, 8)
+  );
+}
+
+function getAttemptCookie() {
+  try {
+    const cookies = document.cookie ? document.cookie.split(";") : [];
+    for (let i = 0; i < cookies.length; i++) {
+      const raw = cookies[i].trim();
+      if (!raw.startsWith(ATTEMPT_COOKIE_NAME + "=")) continue;
+      const value = raw.substring(ATTEMPT_COOKIE_NAME.length + 1);
+      if (!value) return null;
+      const decoded = decodeURIComponent(value);
+      const parsed = JSON.parse(decoded);
+      return parsed && typeof parsed === "object" ? parsed : null;
+    }
+  } catch (e) {
+    // Ignore cookie parsing issues
+  }
+  return null;
+}
+
+function persistAttemptState(status) {
+  try {
+    if (!runState.attemptId || !runState.modeKey) return;
+    const payload = {
+      attemptId: runState.attemptId,
+      modeKey: runState.modeKey,
+      currentLevelIndex: runState.currentLevelIndex,
+      levelsCompleted: runState.levelsCompleted,
+      totalElapsedMs: Math.round(runState.totalElapsedMs || 0),
+      status: status || runState.status || "idle",
+    };
+    const encoded = encodeURIComponent(JSON.stringify(payload));
+    document.cookie =
+      ATTEMPT_COOKIE_NAME +
+      "=" +
+      encoded +
+      "; path=/; max-age=" +
+      60 * 60 * 24;
+  } catch (e) {
+    // Ignore cookie write failures
+  }
+}
+
+function clearAttemptCookie() {
+  try {
+    document.cookie =
+      ATTEMPT_COOKIE_NAME + "=; path=/; max-age=0";
+  } catch (e) {
+    // Ignore cookie clearing errors
+  }
+}
+
+function initRunState(mode, difficulty) {
+  const modeKey = buildModeKey(mode, difficulty);
+  runState.modeKey = modeKey;
+
+  const cookieData = getAttemptCookie();
+  const canResume =
+    cookieData &&
+    cookieData.modeKey === modeKey &&
+    cookieData.status === "active" &&
+    typeof cookieData.currentLevelIndex === "number" &&
+    typeof cookieData.totalElapsedMs === "number" &&
+    cookieData.currentLevelIndex >= 1 &&
+    cookieData.currentLevelIndex <= LEVELS_PER_RUN;
+
+  if (canResume) {
+    runState.attemptId =
+      cookieData.attemptId || generateAttemptId();
+    runState.currentLevelIndex =
+      cookieData.currentLevelIndex || 1;
+    runState.levelsCompleted =
+      cookieData.levelsCompleted || 0;
+    runState.totalElapsedMs =
+      cookieData.totalElapsedMs || 0;
+    runState.status = "running";
+  } else {
+    runState.attemptId = generateAttemptId();
+    runState.currentLevelIndex = 1;
+    runState.levelsCompleted = 0;
+    runState.totalElapsedMs = 0;
+    runState.status = "running";
+    // 不在這裡清除舊 cookie，以免將歷史紀錄和新一輪嘗試混淆；
+    // 相反，我們只是不沿用不兼容的舊記錄。
+  }
+
+  startLevelTimer();
+}
+
+function startLevelTimer() {
+  runState.currentLevelStartTs = performance.now();
+  runState.status = "running";
+  // 將目前累積時間寫入 cookie，供重新載入時沿用
+  persistAttemptState("active");
+}
+
+function handleLevelCompleted() {
+  if (!runState || runState.status !== "running") return;
+
+  const now = performance.now();
+  if (runState.currentLevelStartTs != null) {
+    const deltaMs = Math.max(
+      0,
+      now - runState.currentLevelStartTs
+    );
+    runState.totalElapsedMs += deltaMs;
+  }
+  runState.levelsCompleted = runState.currentLevelIndex;
+  runState.currentLevelStartTs = null;
+
+  if (runState.currentLevelIndex >= LEVELS_PER_RUN) {
+    runState.status = "complete";
+    persistAttemptState("complete");
+    tryUpdateBestRecordForCurrentMode();
+  } else {
+    // 介乎關卡之間顯示勝利模態時暫停計時
+    runState.status = "paused";
+    runState.currentLevelIndex = runState.levelsCompleted + 1;
+    persistAttemptState("active");
+  }
+}
+
+function getTotalSecondsForRun() {
+  return Math.round((runState.totalElapsedMs || 0) / 1000);
+}
+
+function tryUpdateBestRecordForCurrentMode() {
+  const modeKey = runState.modeKey;
+  if (!modeKey) return;
+  const totalSeconds = getTotalSecondsForRun();
+  const storageKey = "pb_best_" + modeKey;
+  try {
+    const raw = window.localStorage
+      ? window.localStorage.getItem(storageKey)
+      : null;
+    const prev =
+      raw != null ? parseInt(raw, 10) : Number.NaN;
+    if (!Number.isFinite(prev) || totalSeconds < prev) {
+      if (window.localStorage) {
+        window.localStorage.setItem(
+          storageKey,
+          String(totalSeconds)
+        );
+      }
+    }
+  } catch (e) {
+    // Ignore localStorage issues
+  }
+}
+
+function resetRunStateForNewAttempt() {
+  runState.attemptId = generateAttemptId();
+  runState.currentLevelIndex = 1;
+  runState.levelsCompleted = 0;
+  runState.totalElapsedMs = 0;
+  runState.currentLevelStartTs = null;
+  runState.status = "idle";
+}
+
 function validatePlacement(index, numberValue) {
+
   let sorted = [...gameState.numbers];
   if (gameState.mode === "ascending") {
     sorted.sort((a, b) => a - b);
@@ -2053,18 +2196,194 @@ const numbersBox = document.getElementById("numbers");
 const slotsBox = document.getElementById("slots");
 const speech = document.getElementById("speech");
 const yellowBubbleText = document.getElementById("yellowBubbleText");
-const result = document.getElementById("result");
 const treasure = document.getElementById("treasure");
 const chest = document.getElementById("chest");
 const outfitLayer = document.getElementById("outfitLayer");
 const victoryModal = document.getElementById("victoryModal");
 const orderInfo = document.getElementById("orderInfo");
 const difficultyInfo = document.getElementById("difficultyInfo");
-
+const descendingStartArrow = document.getElementById("descendingStartArrow");
+const descendingStartLabel = document.getElementById("descendingStartLabel");
 
 let speechTypewriterTimer = null;
 let lastSpeechText = "";
 
+const rewardOverlay = document.getElementById("rewardOverlay");
+const rewardHammerRays = document.getElementById("rewardHammerRays");
+const rewardClaimButton = document.getElementById("rewardClaimButton");
+
+let rewardRayIntervalId = null;
+let rewardRayStartTimeoutId = null;
+let rewardClaimRevealTimeoutId = null;
+
+// Descending-mode start hint state
+let descendingHintTimer = null;
+let descendingHintFadedOut = false;
+
+
+function getDescendingHintElements() {
+  return {
+    arrow: descendingStartArrow || document.getElementById("descendingStartArrow"),
+    label: descendingStartLabel || document.getElementById("descendingStartLabel"),
+  };
+}
+
+function stopDescendingHintAnimations() {
+  if (descendingHintTimer != null) {
+    window.clearInterval(descendingHintTimer);
+    descendingHintTimer = null;
+  }
+}
+
+function resetDescendingHintState() {
+  descendingHintFadedOut = false;
+  stopDescendingHintAnimations();
+  const { arrow, label } = getDescendingHintElements();
+  if (!arrow || !label) return;
+
+  arrow.style.display = "none";
+  label.style.display = "none";
+  arrow.style.opacity = "1";
+  label.style.opacity = "1";
+
+  arrow.classList.remove("descending-arrow-spin", "descending-hint-fade-out");
+  label.classList.remove("descending-label-pulse", "descending-hint-fade-out");
+}
+
+function updateDescendingHintLayout() {
+  const { arrow, label } = getDescendingHintElements();
+  if (!slotsBox || !arrow || !label) return;
+
+  const mode = (gameState && gameState.mode) || "ascending";
+  if (mode !== "descending") {
+    arrow.style.display = "none";
+    label.style.display = "none";
+    return;
+  }
+  if (descendingHintFadedOut) {
+    arrow.style.display = "none";
+    label.style.display = "none";
+    return;
+  }
+
+  const wrappers = Array.from(slotsBox.querySelectorAll(".slot-wrapper"));
+  if (!wrappers.length) {
+    arrow.style.display = "none";
+    label.style.display = "none";
+    return;
+  }
+
+  const rects = wrappers
+    .map((wrapper) => wrapper.getBoundingClientRect())
+    .filter((rect) => rect.width > 0 && rect.height > 0);
+  if (!rects.length) {
+    arrow.style.display = "none";
+    label.style.display = "none";
+    return;
+  }
+
+  // Find rightmost cloud wrapper to anchor the arrow horizontally.
+  let rightmost = rects[0];
+  for (let i = 1; i < rects.length; i++) {
+    if (rects[i].right > rightmost.right) {
+      rightmost = rects[i];
+    }
+  }
+
+  const centerX = rightmost.left + rightmost.width / 2;
+  const arrowTop = rightmost.top - 20; // 20px above the cloud wrapper
+
+  arrow.style.display = "block";
+  label.style.display = "flex";
+
+  arrow.style.left = `${centerX}px`;
+  arrow.style.top = `${arrowTop}px`;
+
+  const arrowRect = arrow.getBoundingClientRect();
+  const labelHeight = label.getBoundingClientRect().height * 1.25 || 0;
+  const labelTop = arrowTop - labelHeight - 4;
+  
+  label.style.left = `${centerX}px`;
+  label.style.top = `${labelTop}px`;
+}
+
+function startDescendingHintAnimations() {
+  const { arrow, label } = getDescendingHintElements();
+  if (!arrow || !label) return;
+
+  const mode = (gameState && gameState.mode) || "ascending";
+  if (mode !== "descending" || descendingHintFadedOut) return;
+
+  const pulse = () => {
+    arrow.classList.add("descending-arrow-spin");
+    label.classList.add("descending-label-pulse");
+    window.setTimeout(() => {
+      arrow.classList.remove("descending-arrow-spin");
+      label.classList.remove("descending-label-pulse");
+    }, 1000);
+  };
+
+  // fire once immediately so students notice the hint quickly
+  pulse();
+
+  stopDescendingHintAnimations();
+  descendingHintTimer = window.setInterval(pulse, 3000);
+}
+
+function ensureDescendingHint() {
+  const mode = (gameState && gameState.mode) || "ascending";
+  if (mode !== "descending") {
+    resetDescendingHintState();
+    return;
+  }
+
+  const { arrow, label } = getDescendingHintElements();
+  if (!arrow || !label) return;
+
+  descendingHintFadedOut = false;
+  arrow.style.opacity = "1";
+  label.style.opacity = "1";
+
+  updateDescendingHintLayout();
+  startDescendingHintAnimations();
+}
+
+function fadeOutDescendingHintOnceFirstPlacement() {
+  const mode = (gameState && gameState.mode) || "ascending";
+  if (mode !== "descending" || descendingHintFadedOut) return;
+
+  const { arrow, label } = getDescendingHintElements();
+  if (!arrow || !label) return;
+
+  descendingHintFadedOut = true;
+  stopDescendingHintAnimations();
+
+  arrow.classList.remove("descending-arrow-spin");
+  label.classList.remove("descending-label-pulse");
+
+  arrow.classList.add("descending-hint-fade-out");
+  label.classList.add("descending-hint-fade-out");
+
+  window.setTimeout(() => {
+    arrow.style.display = "none";
+    label.style.display = "none";
+    arrow.classList.remove("descending-hint-fade-out");
+    label.classList.remove("descending-hint-fade-out");
+  }, 1000);
+}
+
+
+function setBubbleVisibility(isVisible) {
+  const bubble = document.getElementById("yellowBubbleImage");
+  const bubbleTextEl = document.getElementById("yellowBubbleText");
+  const visibility = isVisible ? "visible" : "hidden";
+  if (bubble) {
+    bubble.style.visibility = visibility;
+  }
+  if (bubbleTextEl) {
+    bubbleTextEl.style.visibility = visibility;
+  }
+}
 
 function setSpeech(text) {
   const nextText = typeof text === "string" ? text : String(text ?? "");
@@ -2089,7 +2408,7 @@ function setSpeech(text) {
   let index = 0;
   const stepMs = 24;
 
-  speechTypewriterTimer = window.setInterval(() => {
+    speechTypewriterTimer = window.setInterval(() => {
     index += 1;
     const partial = nextText.slice(0, index);
 
@@ -2103,7 +2422,103 @@ function setSpeech(text) {
   }, stepMs);
 }
 
+function spawnRewardRay() {
+  if (!rewardHammerRays) return;
+
+  const ray = document.createElement("div");
+  ray.className = "reward-ray";
+  const angle = Math.random() * 360;
+  ray.style.setProperty("--ray-rotation", angle + "deg");
+
+  rewardHammerRays.appendChild(ray);
+
+  ray.addEventListener("animationend", () => {
+    if (ray.parentNode) {
+      ray.parentNode.removeChild(ray);
+    }
+  });
+}
+
+function startRewardRays() {
+  if (rewardRayIntervalId != null) return;
+  if (!rewardHammerRays) return;
+
+  rewardRayIntervalId = window.setInterval(spawnRewardRay, 100);
+}
+
+function stopRewardRays() {
+  if (rewardRayIntervalId != null) {
+    window.clearInterval(rewardRayIntervalId);
+    rewardRayIntervalId = null;
+  }
+}
+
+function showRewardOverlay() {
+  document.getElementById("menuArrow").style.opacity="0";
+  if (!rewardOverlay) return;
+
+  if (rewardClaimButton) {
+    rewardClaimButton.classList.remove("reward-claim-visible");
+  }
+
+  rewardOverlay.classList.remove("hidden");
+  rewardOverlay.classList.add("reward-overlay-active");
+
+  // Start rays once the hammer pop animation has completed
+  rewardRayStartTimeoutId = window.setTimeout(() => {
+    startRewardRays();
+  }, 3800);
+
+  // Reveal the claim button only when the reward text starts fading in
+  rewardClaimRevealTimeoutId = window.setTimeout(() => {
+    if (rewardClaimButton) {
+      rewardClaimButton.classList.add("reward-claim-visible");
+    }
+  }, 4000);
+
+
+  if (rewardClaimButton) {
+    rewardClaimButton.onclick = handleRewardClaimClick;
+  }
+}
+
+function hideRewardOverlay() {
+  if (!rewardOverlay) return;
+
+  if (rewardRayStartTimeoutId != null) {
+    window.clearTimeout(rewardRayStartTimeoutId);
+    rewardRayStartTimeoutId = null;
+  }
+
+  if (rewardClaimRevealTimeoutId != null) {
+    window.clearTimeout(rewardClaimRevealTimeoutId);
+    rewardClaimRevealTimeoutId = null;
+  }
+
+  rewardOverlay.classList.add("hidden");
+  rewardOverlay.classList.remove("reward-overlay-active");
+
+  if (rewardClaimButton) {
+    rewardClaimButton.classList.remove("reward-claim-visible");
+  }
+
+  stopRewardRays();
+
+  if (rewardHammerRays) {
+    while (rewardHammerRays.firstChild) {
+      rewardHammerRays.removeChild(rewardHammerRays.firstChild);
+    }
+  }
+}
+
+function handleRewardClaimClick() {
+  document.getElementById("menuArrow").style.opacity="1";
+  createConfetti();
+  hideRewardOverlay();
+}
+
 function createConfetti() {
+
   const colors = ["#ffd54f", "#ff7043", "#66bb6a", "#42a5f5", "#ab47bc"];
   for (let i = 0; i < 50; i++) {
     const confetti = document.createElement("div");
@@ -2173,19 +2588,21 @@ function startGame(difficulty) {
 
   if (difficultyInfo) {
     difficultyInfo.innerHTML =
-      difficulty === "easy" ? "⭐ 等級一 (1-10)" : "⭐⭐ 等級二 (1-20)";
+      difficulty === "easy" ? "初級挑戰 (1-10)" : "進階挑戰 (1-20)";
   }
 
-  renderNumbers();
+    renderNumbers();
   renderSlots();
-  if (result) result.textContent = "";
-
   updateStumpsLayout();
 
-  setSpeech("👋 請依序拉數字到空格 😊");
+    setSpeech("👋 請將數字依序拉到空格 😊");
   updateBottomModeArrowLayout();
   updateBottomModeArrowDirection();
+  // Show descending start hint when applicable.
+  ensureDescendingHint();
 }
+
+
 
 
 
@@ -2345,7 +2762,6 @@ function renderNumbers() {
   if (!numbersBox) return;
 
   const baseImg = images.crate;
-  const tileScale = 0.2; // main cloud size
 
   const baseImgReady =
     baseImg && baseImg.complete && baseImg.naturalWidth && baseImg.naturalHeight;
@@ -2381,9 +2797,13 @@ function renderNumbers() {
   let tileWidth = 64;
   let tileHeight = 64;
 
+  const cloudAspectRatio = getCloudYellowAspectRatio();
+
   if (baseImgReady) {
-    tileWidth = baseImg.naturalWidth * tileScale;
-    tileHeight = baseImg.naturalHeight * tileScale;
+    tileWidth = Math.min(window.screen.availHeight * 0.125, window.screen.availWidth * 0.125);
+    tileHeight = tileWidth / cloudAspectRatio;
+  } else {
+    tileHeight = tileWidth / cloudAspectRatio;
   }
 
   numbersBox.innerHTML = "";
@@ -2419,7 +2839,7 @@ function renderNumbers() {
     // Glow slightly larger than the main cloud; if we know the natural size,
     // keep the ratio 0.26 : 0.225, otherwise approximate with 1.15×
     const glowFactor = baseImg && baseImg.naturalWidth && baseImg.naturalHeight
-      ? (0.26 / tileScale)
+      ? 1.3
       : 1.15;
 
     const glowWidth = tileWidth * glowFactor;
@@ -2637,6 +3057,7 @@ function addNumberEventListeners(div) {
 
 function renderSlots() {
   if (!slotsBox) return;
+  clearSuccessSlotClouds();
   slotsBox.innerHTML = "";
 
   for (let i = 0; i < 5; i++) {
@@ -2698,12 +3119,11 @@ function renderSlots() {
     }
   }
 
-  updateGateOverlays();
+    updateGateOverlays();
   updateBottomModeArrowLayout();
   updateBottomModeArrowDirection();
+  ensureDescendingHint();
 }
-
-
 
 
 
@@ -2956,7 +3376,14 @@ function checkDigitRealTime(slot, value) {
 
     // Compute stump position in canvas coordinates and trigger success effect
 
+    // In descending mode, fade out the start arrow/label after the first
+    // correctly placed cloud.
+    if ((gameState && gameState.mode) === "descending" && gameState.selectedNumbers.length === 1) {
+      fadeOutDescendingHintOnceFirstPlacement();
+    }
+
         if (canvas) {
+
       const canvasRect = canvas.getBoundingClientRect();
 
       // Use the slot (front face overlay) center as the pineapple origin.
@@ -3002,15 +3429,10 @@ function checkDigitRealTime(slot, value) {
         ? -stumpImg.getBoundingClientRect().height * 0.25
         : 40;
 
-      // Spawn a main success cloud at the slot centre (canvas layer),
-      // which will expand outwards with a bounce and then stay.
-      successSlotClouds.push({
-        x: fx,
-        y: fy,
-        value: numericValue,
-        startTime: performance.now(),
-        duration: 800,
-      });
+      // Render the success cloud as part of the slot wrapper so it
+      // always moves with the slot on live resize.
+      createSuccessSlotCloud(wrapper, numericValue);
+
 
 
 
@@ -3044,28 +3466,37 @@ function checkDigitRealTime(slot, value) {
 
 
 function completeGame() {
-  if (result) {
-    result.innerHTML =
-      '<span class="text-3xl text-green-600">🎉 任務完成！</span>';
-  }
+  // 每題完成時計算本關所用時間，並累積到三關總時間
+  handleLevelCompleted();
+
+  const isFinalLevel =
+    runState &&
+    runState.levelsCompleted >= LEVELS_PER_RUN;
+
   setSpeech("😄 恭喜！");
 
   document.querySelectorAll(".num").forEach((num) => {
     num.style.pointerEvents = "none";
     num.classList.add("opacity-50");
   });
-
-    // At end-game, the bear celebrates and the victory modal shows.
-
+  // At end-game, the bear celebrates and the victory modal shows.
   setTimeout(() => {
-    playAudioById('sfxCorrectHappy');
-    document.getElementById("menuArrow").style.display = "none";
-    document.getElementById("pineappleBearImage").src = "./pineapple_bear_win.png";
-    document.getElementById("pineappleBearImage").style.zIndex = "10000";
-    createConfetti();
+    if (isFinalLevel) {
+      playAudioById("sfxCorrectHappy");
+    } else {
+      playAudioById("sfxMiddleLevelSuccess");
+    }
+    const bear = document.getElementById("pineappleBearImage");
+    if (bear) {
+      bear.src = "./pineapple_bear_win.png";
+      bear.style.zIndex = "10000";
+    }
     showVictoryModal();
-  }, 500);
+  }, 2000);
 }
+
+
+
 
 
 
@@ -3186,10 +3617,150 @@ function updateTouchClonePosition(touch) {
   }
 }
 
-function showVictoryModal() {
-  if (victoryModal) {
-    victoryModal.classList.remove("hidden");
+function resetBearAfterWin() {
+  const bear = document.getElementById("pineappleBearImage");
+  if (bear) {
+    bear.src = "./pineapple_bear.png";
+    bear.style.zIndex = "auto";
   }
+}
+
+function resetGameUiForNextQuestion() {
+  // Re-enable number tiles
+  document.querySelectorAll(".num").forEach((num) => {
+    num.style.pointerEvents = "auto";
+    num.classList.remove("opacity-50");
+  });
+
+
+    // Clear success overlays and comparison visuals
+  clearSuccessSlotClouds();
+  pineapplePositions = [];
+  if (pineappleCompareSvg && pineappleCompareSvg.firstChild) {
+    while (pineappleCompareSvg.firstChild) {
+      pineappleCompareSvg.removeChild(pineappleCompareSvg.firstChild);
+    }
+  }
+
+  // Reset descending-mode hint for the next question.
+  resetDescendingHintState();
+}
+
+
+function showVictoryModal() {
+    if (!victoryModal) return;
+
+  // Ensure the yellow bubble and its text do not show above the victory overlay.
+  // We hide them explicitly instead of relying solely on z-index so the
+  // modal backdrop can remain semi-transparent without the bubble shining through.
+  setBubbleVisibility(false);
+
+  const messageEl = document.getElementById("victoryMessage");
+  const primaryBtn = document.getElementById("victoryPrimaryButton");
+  const secondaryBtn = document.getElementById("victorySecondaryButton");
+
+  const isFinalLevel =
+    runState &&
+    runState.currentLevelIndex >= LEVELS_PER_RUN &&
+    runState.status === "complete";
+
+  if (isFinalLevel) {
+    const totalSeconds = getTotalSecondsForRun();
+    if (messageEl) {
+      messageEl.textContent =
+        "🎉 挑戰大成功！\n你使用了" +
+        totalSeconds +
+        "秒完成三個關卡。\n表現出色👏";
+      messageEl.style.color = "#16a34a";
+    }
+
+    if (primaryBtn) {
+      primaryBtn.textContent = "再次由第一關開始挑戰";
+      primaryBtn.onclick = handleRestartRunClick;
+      primaryBtn.className =
+        "victory-button victory-button-primary-restart";
+    }
+
+    if (secondaryBtn) {
+      secondaryBtn.textContent = "🏠 回到菜單";
+      secondaryBtn.onclick = handleReturnToMenuClick;
+      secondaryBtn.className =
+        "victory-button victory-button-secondary-menu";
+      secondaryBtn.classList.remove("hidden");
+    }
+  } else {
+    if (messageEl) {
+      messageEl.textContent = "👍 做得好！\n前往下一關吧 🚀";
+      messageEl.style.color = "#16a34a";
+    }
+
+    if (primaryBtn) {
+      primaryBtn.textContent = "去下一關";
+      primaryBtn.onclick = handleNextLevelClick;
+      primaryBtn.className =
+        "victory-button victory-button-primary-next";
+    }
+
+    if (secondaryBtn) {
+      secondaryBtn.classList.add("hidden");
+    }
+  }
+
+    victoryModal.classList.remove("hidden");
+
+  if (isFinalLevel) {
+    showRewardOverlay();
+  }
+}
+
+
+function handleNextLevelClick() {
+  if (victoryModal) {
+    victoryModal.classList.add("hidden");
+  }
+  // Bring the yellow speech bubble back once the modal closes.
+  setBubbleVisibility(true);
+
+  resetBearAfterWin();
+  resetGameUiForNextQuestion();
+
+  // Start next level within the same run
+  if (runState.currentLevelIndex < LEVELS_PER_RUN) {
+    runState.status = "running";
+  }
+  startGame(gameState.difficulty);
+  startLevelTimer();
+}
+
+function handleRestartRunClick() {
+  if (victoryModal) {
+    victoryModal.classList.add("hidden");
+  }
+  // Bring the yellow speech bubble back once the modal closes.
+  setBubbleVisibility(true);
+
+  resetBearAfterWin();
+  resetGameUiForNextQuestion();
+
+  // Wipe current attempt timing (但保留 localStorage 中的最佳紀錄)
+  clearAttemptCookie();
+
+  resetRunStateForNewAttempt();
+  runState.modeKey = buildModeKey(
+    gameState.mode,
+    gameState.difficulty
+  );
+  runState.status = "running";
+  runState.currentLevelIndex = 1;
+
+  startGame(gameState.difficulty);
+  startLevelTimer();
+}
+
+function handleReturnToMenuClick() {
+  // 將本輪嘗試標記為完成，但不清除 cookie，避免混淆歷史紀錄
+  persistAttemptState(runState.status || "complete");
+  returnToMenu();
 }
 
 function returnToMenu() {
@@ -3201,12 +3772,14 @@ function returnToMenu() {
 }
 
 function closeVictoryModal() {
-  const targetUrl = new URL("menu.html", window.location.href);
-
-  setTimeout(() => {
-    window.location.href = targetUrl.toString(); // 永遠做完整重載
-  }, 1200);
+  if (victoryModal) {
+    victoryModal.classList.add("hidden");
+  }
+  // Restore the yellow speech bubble when the modal is dismissed.
+  setBubbleVisibility(true);
 }
+
+
 
 function updateBottomModeArrowDirection() {
   const rightArrow = document.getElementById("bottomArrowRight");
@@ -3243,16 +3816,27 @@ function updateBottomModeArrowLayout() {
 
   const left = Math.min(...rects.map((rect) => rect.left));
   const right = Math.max(...rects.map((rect) => rect.right));
-  const bottom = Math.max(...rects.map((rect) => rect.bottom));
   const slotHeight = Math.max(...rects.map((rect) => rect.height));
   const arrowHeight = Math.max(28, Math.min(52, slotHeight * 0.4));
-  const arrowTop = Math.min(window.innerHeight - arrowHeight - 8, bottom + 12);
+
+  const stripTop = window.innerHeight - arrowHeight - 10;
 
   strip.style.left = `${left}px`;
-  strip.style.top = `${arrowTop}px`;
+  strip.style.top = `${stripTop}px`;
   strip.style.width = `${Math.max(0, right - left)}px`;
   strip.style.height = `${arrowHeight}px`;
+
+  // Keep #slots directly above the BottomModeArrow container.
+    const slotsHeight = slotsBox.getBoundingClientRect().height;
+  if (slotsHeight > 0) {
+    slotsBox.style.top = `${stripTop - slotsHeight}px`;
+  }
+
+  // Keep descending-mode hint aligned to the rightmost cloud.
+  updateDescendingHintLayout();
 }
+
+
 
 function playAudioById(id) {
   const el = document.getElementById(id);
@@ -3266,8 +3850,7 @@ function playAudioById(id) {
 // 由主選單已選配置自動初始化遊戲
 
 
-window.onload = function(){
-  
+window.onload = function () {
   /*if(!window.location.hash) {
       window.location = window.location + '#loaded';
       window.location.reload(true);
@@ -3316,7 +3899,11 @@ window.onload = function(){
   }
   gameState.mode = mode;
   startGame(level);
-}
+
+  // 問題載入完成後啟動隱藏計時（每輪三關）
+  initRunState(gameState.mode, gameState.difficulty);
+};
+
 /*(function initGameFromMenu() {
 
 

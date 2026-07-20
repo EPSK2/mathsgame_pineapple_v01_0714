@@ -28,7 +28,7 @@ const images = {
 };
 
 // Use provided assets
-images.jungleBg.src = "./grass.png";
+images.jungleBg.src = "./grass_02.png";
 images.tree.src = "./tree.png";
 images.leaf.src = "./leaf.png";
 images.tallTree.src = "./tall_tree.png";
@@ -93,7 +93,7 @@ function initTrees() {
   );
   */
   // Side tall trees
-  const tallImg = images.tallTree;
+  /*const tallImg = images.tallTree;
   if (tallImg && tallImg.complete && tallImg.naturalHeight > 0) {
     const desiredHeight = canvas.height;
     const scaleTall = desiredHeight / tallImg.naturalHeight;
@@ -105,7 +105,7 @@ function initTrees() {
   } else {
     layers.sideTrees.left = null;
     layers.sideTrees.right = null;
-  }
+  }*/
 }
 
 const particleConfig = {
@@ -477,35 +477,11 @@ function registerAssetLoad(assetKey) {
 
 requiredAssetKeys.forEach(registerAssetLoad);
 
-// ======================= Menu Interaction Logic =======================
+// ======================= Game Config & Navigation =======================
 
-const speech = document.getElementById("speech");
-const difficultySelection = document.getElementById("difficultySelection");
 let menuConfig = { mode: null, level: null };
 
-function setSpeech(text) {
-  if (speech) {
-    speech.innerHTML = text;
-  }
-}
-
-function selectMode(mode) {
-  menuConfig.mode = mode;
-  
-  // 顯示難度選單
-  if (difficultySelection) {
-    difficultySelection.classList.remove("hidden");
-  }
-
-  // 根據選擇更新對話
-  if (mode === "ascending") {
-    setSpeech("👉 由 <b>小 → 大</b> 排列！<br/>而家請選擇難度啦！");
-  } else {
-    setSpeech("👈 由 <b>大 → 小</b> 排列！<br/>而家請選擇難度啦！");
-  }
-}
-
-// 替換整個 startGame 函數為以下版本（強制重載 game.html）
+// 強制重載 game.html，並附帶模式與難度參數
 function startGame(difficulty) {
   menuConfig.level = difficulty;
 
@@ -526,11 +502,17 @@ function startGame(difficulty) {
   }, 1200);
 }
 
+
 // ======================= Dialog System =======================
 
 // Simple sound helpers for dialog
 let nextPageAudio = null;
 let selectAudio = null;
+
+// Tutorial audio player (shared for all tutorial pages)
+let tutorialAudioPlayer = null;
+let tutorialAudioTimeoutId = null;
+
 
 function playNextPageSound() {
   try {
@@ -564,26 +546,28 @@ let tutorialWindow = null;
 let tutorialContent = null;
 let tutorialPrevButton = null;
 let tutorialNextButton = null;
+let tutorialReplayButton = null;
 let tutorialFinishButton = null;
 let tutorialPageIndicator = null;
 let tutorialCloseButton = null;
 let currentTutorialPage = 0;
+
 
 // Developers: put tutorial page HTML content here.
 // Each entry is injected as innerHTML into the main tutorial content area.
 const tutorialPages = [
   `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
-      <img style="width: 700px; height: auto;" src="ins01.png">
-      <div class="text-4xl leading-tight text-gray-700 whitespace-pre-line">
+      <img style="max-height: 30vh; height: auto; width: auto;" src="ins01.png">
+      <div class="leading-tight text-gray-700 whitespace-pre-line" style="font-size: clamp(2.5rem, 6vh, 4vw);">
         遊戲場地內有 <b>5</b> 朵雲，印著不同的數字。
       </div>
     </div>
   `,
   `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.1rem;">
-      <img style="width: 700px; height: auto;" src="ins02.png">
-      <div class="text-4xl leading-relaxed text-gray-700 whitespace-pre-line">
+      <img style="max-height: 30vh; height: auto; width: auto;" src="ins02.png">
+      <div class="leading-relaxed text-gray-700 whitespace-pre-line" style="font-size: clamp(2.5rem, 6vh, 4vw);">
         如果箭頭指向 <span class="text-6xl">右 ➡➡➡</span>，
         就需要把數字從 <span class="text-3xl">小</span> 到 <span class="text-6xl">大</span> 排列。
       </div>
@@ -591,8 +575,8 @@ const tutorialPages = [
   `,
   `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.1rem;">
-      <img style="width: 700px; height: auto;" src="ins03.png">
-      <div class="text-4xl leading-relaxed text-gray-700 whitespace-pre-line">
+      <img style="max-height: 30vh; height: auto; width: auto;" src="ins03.png">
+      <div class="leading-relaxed text-gray-700 whitespace-pre-line" style="font-size: clamp(2.5rem, 6vh, 4vw);">
         如果箭頭指向 <span class="text-6xl">左 ⬅⬅⬅</span>，
         就需要把數字從 <span class="text-6xl">大</span> 到 <span class="text-3xl">小</span> 排列。
       </div>
@@ -600,11 +584,12 @@ const tutorialPages = [
   `,
   `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.1rem;">
-      <video src="ins04.webm" muted loop autoplay style="width: 50%;"></video>
-      <div class="text-4xl leading-relaxed text-gray-700 whitespace-pre-line">用手指/滑鼠按住雲朵，拉動，再放到正確位置上！</div>
+      <video src="ins04.webm" muted loop autoplay style="max-height: 50vh; height: auto; width: auto;"></video>
+      <div class="leading-relaxed text-gray-700 whitespace-pre-line" style="font-size: clamp(2.5rem, 6vh, 4vw);">用手指/滑鼠按住雲朵，拖動到正確位置上！</div>
     </div>
   `,
 ];
+
 
 function initTutorialUI() {
   tutorialOverlay = document.getElementById("tutorialOverlay");
@@ -612,9 +597,12 @@ function initTutorialUI() {
   tutorialContent = document.getElementById("tutorialContent");
   tutorialPrevButton = document.getElementById("tutorialPrevButton");
   tutorialNextButton = document.getElementById("tutorialNextButton");
+  tutorialReplayButton = document.getElementById("tutorialReplayButton");
   tutorialFinishButton = document.getElementById("tutorialFinishButton");
   tutorialPageIndicator = document.getElementById("tutorialPageIndicator");
   tutorialCloseButton = document.getElementById("tutorialCloseButton");
+  tutorialAudioPlayer = document.getElementById("tutorialAudioPlayer");
+
 
   if (
     !tutorialOverlay ||
@@ -622,12 +610,14 @@ function initTutorialUI() {
     !tutorialContent ||
     !tutorialPrevButton ||
     !tutorialNextButton ||
+    !tutorialReplayButton ||
     !tutorialFinishButton ||
     !tutorialPageIndicator ||
     !tutorialCloseButton
   ) {
     return;
   }
+
 
   // 阻止點擊遮罩穿透到底層
   tutorialOverlay.addEventListener("click", (event) => {
@@ -653,7 +643,7 @@ function initTutorialUI() {
     }
   });
 
-  tutorialNextButton.addEventListener("click", (event) => {
+    tutorialNextButton.addEventListener("click", (event) => {
     event.stopPropagation();
     event.preventDefault();
     if (currentTutorialPage < tutorialPages.length - 1) {
@@ -661,7 +651,15 @@ function initTutorialUI() {
       renderTutorialPage();
     }
   });
+
+  tutorialReplayButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    currentTutorialPage = 0;
+    renderTutorialPage();
+  });
 }
+
 
 function openTutorial(startPage = 0) {
   if (
@@ -690,9 +688,47 @@ function closeTutorial() {
   if (tutorialWindow) {
     tutorialWindow.classList.add("hidden");
   }
+  // Stop any pending tutorial audio playback and reset
+  if (tutorialAudioTimeoutId) {
+    clearTimeout(tutorialAudioTimeoutId);
+    tutorialAudioTimeoutId = null;
+  }
+  if (tutorialAudioPlayer) {
+    try {
+      tutorialAudioPlayer.pause();
+      tutorialAudioPlayer.currentTime = 0;
+    } catch (e) {
+      console.error("Failed to stop tutorial audio", e);
+    }
+  }
+}
+
+function playTutorialPageAudio(pageNumber) {
+  if (!tutorialAudioPlayer) return;
+
+  const src = `tut_${pageNumber}oo4.mp3`;
+
+  try {
+    tutorialAudioPlayer.pause();
+    tutorialAudioPlayer.currentTime = 0;
+  } catch (e) {
+    // Ignore errors when resetting audio
+  }
+
+  // If the same source is already loaded, just play it
+  if (tutorialAudioPlayer.dataset.currentSrc === src && tutorialAudioPlayer.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+    tutorialAudioPlayer.play().catch(() => {});
+    return;
+  }
+
+  tutorialAudioPlayer.src = src;
+  tutorialAudioPlayer.dataset.currentSrc = src;
+  tutorialAudioPlayer.load();
+  tutorialAudioPlayer.play().catch(() => {});
 }
 
 function renderTutorialPage() {
+
   if (!tutorialContent || !tutorialPageIndicator) return;
 
   const total = tutorialPages.length || 1;
@@ -713,16 +749,35 @@ function renderTutorialPage() {
     }
   }
 
-  if (tutorialNextButton && tutorialFinishButton) {
+      if (tutorialNextButton && tutorialFinishButton) {
     if (currentTutorialPage === total - 1) {
       tutorialNextButton.classList.add("hidden");
       tutorialFinishButton.classList.remove("hidden");
+      if (tutorialReplayButton) {
+        tutorialReplayButton.classList.remove("hidden");
+      }
     } else {
       tutorialNextButton.classList.remove("hidden");
       tutorialFinishButton.classList.add("hidden");
+      if (tutorialReplayButton) {
+        tutorialReplayButton.classList.add("hidden");
+      }
     }
   }
+
+  // Schedule tutorial audio playback for this page (0.5s delay)
+  if (tutorialAudioTimeoutId) {
+    clearTimeout(tutorialAudioTimeoutId);
+  }
+  const pageNumber = currentTutorialPage + 1;
+  tutorialAudioTimeoutId = setTimeout(() => {
+    if (isTutorialOpen) {
+      playTutorialPageAudio(pageNumber);
+    }
+  }, 500);
 }
+
+
 
 class DialogManager {
 
@@ -989,9 +1044,9 @@ function startMenuDialogSystem() {
     },*/
     {
       type: "Choice",
-      Question: "想知道任務內容嗎？",
+      Question: "想知道任務要求嗎？",
       AnswerNo: 2,
-      AnswerArr: ["好", "不用了，謝謝"],
+      AnswerArr: ["現在立即去看", "我已經看過了/我稍後去看"],
     },
     {
       type: "Choice",
@@ -1003,7 +1058,7 @@ function startMenuDialogSystem() {
       type: "Choice",
       Question: "選擇一個難度吧~",
       AnswerNo: 2,
-      AnswerArr: ["⭐ 1-10", "⭐⭐ 1-20"],
+      AnswerArr: ["初級挑戰 (1-10)", "進階挑戰 (1-20)"],
     },
     {
       type: "TextFinal",
@@ -1027,7 +1082,7 @@ document.addEventListener("dialogChoiceSelected", (event) => {
   const { node, answerIndex, answerText } = detail;
 
     if (node.type === "Choice" && typeof node.Question === "string") {
-    if (node.Question.includes("任務內容")) {
+    if (node.Question.includes("任務要求")) {
       // Tutorial: user wants to hear about the task instructions
       if (answerIndex === 0 && typeof openTutorial === "function") {
         openTutorial();
@@ -1059,14 +1114,12 @@ window.onload = function() {
       window.location.reload(true);
   }*/
 
-  const title = document.getElementById("gameTitle");
+    const title = document.getElementById("gameTitle");
   const runningBearVideo = document.getElementById("runningBearVideo");
   const animatedBearVideo = document.getElementById("animatedBearVideo");
-  const menuContainer = document.getElementById("menu");
-  const menuButtons = menuContainer
-    ? Array.from(menuContainer.querySelectorAll(".menu-arrow"))
-    : [];
+  const gameHeader = document.querySelector(".game-header");
   const infoBox = document.getElementById("infoBox");
+
 
   let bearCrossfadeStarted = false;
   const prepareAnimatedBearVideo = () => {
@@ -1141,7 +1194,7 @@ window.onload = function() {
       runningBearVideo.load();
     }
 
-    runningBearVideo.addEventListener("ended", () => {
+        runningBearVideo.addEventListener("ended", () => {
       // Ensure loop bear is ready before starting fade-out to prevent blank gaps.
       if (
         animatedBearVideo &&
@@ -1163,38 +1216,42 @@ window.onload = function() {
         title.classList.add("fly-out-title");
       }
 
-            // 2 秒後（標題飛出完成），隱藏標題並滑出左側菜單標籤
+      // 1 秒後（標題飛出完成），隱藏標題並觸發標題列動畫
       setTimeout(() => {
         if (title) {
           title.style.display = "none";
         }
 
-        if (menuContainer) {
-          menuContainer.classList.add("menu-visible");
-
-          menuButtons.forEach((button, index) => {
-            // 為每個標籤加入少許延遲，讓分離感更明顯
-            button.style.transitionDelay = `${index * 0.15}s`;
-            button.classList.add("menu-arrow-visible");
-          });
-
-          // 所有 menu-arrows 滑出後，淡入中央提示框
-          if (infoBox && menuButtons.length > 0) {
-                        const lastDelayMs = (menuButtons.length - 1) * 150; // 與上面 0.15s 對應
-            const slideDurationMs = 1000; // .menu-arrow 的 transform transition 時長
-            setTimeout(() => {
+        // 觸發標題列由左至右的 roll-out 動畫
+        if (gameHeader) {
+          const onHeaderAnimationEnd = () => {
+            // 標題列動畫完成後才顯示中央透明提示框與啟動對話系統
+            if (infoBox) {
               infoBox.classList.remove("opacity-0", "pointer-events-none");
               infoBox.classList.add("opacity-100", "pointer-events-auto");
+            }
 
-              // 中央透明提示框出現後，再啟動對話系統
-              startMenuDialogSystem();
-            }, lastDelayMs + slideDurationMs);
+            startMenuDialogSystem();
+
+            gameHeader.removeEventListener("animationend", onHeaderAnimationEnd);
+          };
+
+          gameHeader.addEventListener("animationend", onHeaderAnimationEnd);
+          gameHeader.classList.add("header-roll-out");
+        } else {
+          // 沒有標題列時的後備方案：直接顯示對話框
+          if (infoBox) {
+            infoBox.classList.remove("opacity-0", "pointer-events-none");
+            infoBox.classList.add("opacity-100", "pointer-events-auto");
           }
+          startMenuDialogSystem();
         }
-      }, 2000);
+      }, 1000);
 
     });
   }
+
+
 
   if (animatedBearVideo) {
     // Preload the looping bear early so cross-fade can start immediately.
@@ -1205,9 +1262,6 @@ window.onload = function() {
     prepareAnimatedBearVideo();
   }
 
-  // 確保頁面載入時，左側菜單處於隱藏狀態
-  if (menuContainer) {
-    menuContainer.classList.remove("menu-visible");
-  }
+    // 頁面載入完成時的其他初始狀態可在此處理（如有需要）
 }
 //});

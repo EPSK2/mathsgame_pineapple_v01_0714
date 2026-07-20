@@ -1,31 +1,52 @@
-<canvas id="myCanvas" width="500" height="500"></canvas>
+.pushable-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-top: 20px;
+  cursor: pointer;
+}
 
-<script>
-  const canvas = document.getElementById('myCanvas');
-  const ctx = canvas.getContext('2d');
+.pushable-button .front {
+  display: block;
+  padding: 10px 20px;
+  min-width: 220px;
+  border-radius: 20px;
+    /* Responsive font size: same clamp logic as dialog text */
+  font-size: clamp(2rem, 6vh, 3vw);
 
-  // 1. Create an invisible, looping HTML5 video element
-  const video = document.createElement('video');
-  video.src = 'animation.mp4'; // Convert your GIF to MP4 or WebM
-  video.loop = true;
-  video.muted = true;         // Must be muted for browsers to auto-play
-  video.playsInline = true;
+  text-align: center;
+  box-shadow: 0 6px 0 rgba(55, 65, 81, 0.25);
+  transform: translateY(-4px);
+  transition:
+    transform 600ms cubic-bezier(.3, .7, .4, 1),
+    background-color 150ms ease-out,
+    box-shadow 150ms ease-out,
+    filter 150ms ease-out;
+}
 
-  // 2. Start playback
-  video.play();
+/* Default colours for dialog choice buttons */
+.dialog-choice-button .front {
+  background-color: #f3f0e0; /* original background */
+  color: #374151; /* original text colour */
+  border: 5px solid #374151; /* original border */
+}
 
-  // 3. Create a clean animation loop to paint the video frames
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw the current video frame onto the canvas
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    requestAnimationFrame(draw);
-  }
+.pushable-button:hover .front {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 0 rgba(55, 65, 81, 0.35);
+  filter: brightness(1.05);
+  transition:
+    transform 250ms cubic-bezier(.3, .7, .4, 1.5),
+    background-color 150ms ease-out,
+    box-shadow 150ms ease-out,
+    filter 150ms ease-out;
+}
 
-  // Start the canvas render loop once the video is ready
-  video.addEventListener('play', () => {
-    requestAnimationFrame(draw);
-  });
-</script>
+.pushable-button:active .front {
+  transform: translateY(-2px);
+  transition: transform 34ms;
+}
+
+.pushable-button:focus:not(:focus-visible) {
+  outline: none;
+}

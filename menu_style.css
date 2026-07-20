@@ -7,7 +7,49 @@ body {
   box-sizing: border-box;
 }
 
+
+/* Header bar for game title: full-width at top 5% of screen */
+.game-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 7.5vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10L25 40L-5 40Z' fill='%23FF8C00' fill-opacity='0.4'/%3E%3Cpath d='M70 60L85 90L55 90Z' fill='%23FF8C00' fill-opacity='0.3'/%3E%3Cpath d='M30 70L45 100L15 100Z' fill='%23FF8C00' fill-opacity='0.5'/%3E%3Cpath d='M80 20L95 50L65 50Z' fill='%23FF8C00' fill-opacity='0.35'/%3E%3C/svg%3E"),
+  /* Layer 2 (Bottom): base radial gradient */
+  radial-gradient(circle at center, #FFEA00 0%, #FFD700 60%, #B8860B 100%);
+  background-size: 100px 100px, 100% 100%;
+  background-repeat: repeat, no-repeat;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.35);
+  z-index: 100;
+  border-radius: 20px;
+  /* hidden / off-screen initially */
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+/* Game header roll-out animation */
+@keyframes headerRollOut {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.game-header.header-roll-out {
+  animation: headerRollOut 3s ease-in-out forwards;
+}
+
+
 body {
+
   font-family: "Comic Sans MS", "Noto Sans TC", sans-serif;
   /* Use the canvas as a full-screen background, center the game shell */
   background-color: #020617;
@@ -19,8 +61,15 @@ body {
   position: relative;
 }
 
+
+/* Hide the shared tutorial audio player (no visual controls) */
+#tutorialAudioPlayer {
+  display: none;
+}
+
 /* Full-screen jungle canvas background */
 #gameCanvas {
+
   position: fixed;
   inset: 0;
   display: block;
@@ -62,52 +111,7 @@ body {
   border-color: transparent transparent transparent white;
 }
 
-/* Difficulty & mode buttons */
-.difficulty-btn {
-  padding: 12px 24px;
-  margin: 8px;
-  font-size: 18px;
-  font-weight: bold;
-  border: none;
-  border-radius: 18px;
-  cursor: pointer;
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-  box-shadow: 0 6px 0 rgba(55, 65, 81, 0.25);
-}
 
-.difficulty-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 0 rgba(55, 65, 81, 0.35);
-}
-
-.difficulty-btn.easy {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: white;
-}
-
-.difficulty-btn.hard {
-  background: linear-gradient(135deg, #f97316, #ea580c);
-  color: white;
-}
-
-.mode-btn {
-  padding: 12px 24px;
-  margin: 8px;
-  font-size: 18px;
-  font-weight: bold;
-  border: none;
-  border-radius: 18px;
-  cursor: pointer;
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-  box-shadow: 0 6px 0 rgba(30, 64, 175, 0.7);
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-}
-
-.mode-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 0 rgba(30, 64, 175, 0.8);
-}
 
 /* Utility Animations */
 @keyframes pop {
@@ -144,13 +148,15 @@ body {
 }
 
 #runningBearVideo {
-  transform: scale(0.28) translateX(-50%);
+  transform: translateX(-50%);
+  height: 30vh;
   opacity: 1;
   transition: opacity 3s ease;
 }
 
 #animatedBearVideo {
-  transform: scale(0.125) translateX(-50%);
+  transform: translateX(-50%);
+  height: 30vh;
   opacity: 0;
   transition: opacity 2s ease;
 }
@@ -158,11 +164,13 @@ body {
 @keyframes bearVideoSlideIn {
   0% {
     left: -200px;
-    transform: scale(0.28) translateX(-50%);
+    height: 30vh;
+    transform: translateX(-50%);
   }
   100% {
     left: 50%;
-    transform: scale(0.28) translateX(-50%);
+    height: 30vh;
+    transform: translateX(-50%);
   }
 }
 
@@ -189,57 +197,7 @@ body {
   animation: flyOutToBottom 1s ease-in forwards;
 }
 
-/* Slide-out menu labels */
-.menu-container {
-  position: fixed;
-  top: 15%;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 1500;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease-out;
-}
 
-.menu-container.menu-visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.menu-arrow {
-  position: relative;
-  display: inline-flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: 10px 18px;
-  min-height: 56px;
-  width: auto;
-  max-width: 80vw;
-  box-shadow: none;
-  color: #000;
-  font-weight: bold;
-  border: 3px solid #000;
-  cursor: default;
-  background: transparent;
-  white-space: pre-line;
-  transform: translateX(calc(-100% + 30px));
-  transition: transform 1s ease-out;
-}
-
-.menu-arrow.menu-arrow-visible {
-  transform: translateX(0);
-}
-
-.pineapple-box {
-  border-radius: 20px;
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10L25 40L-5 40Z' fill='%23FF8C00' fill-opacity='0.4'/%3E%3Cpath d='M70 60L85 90L55 90Z' fill='%23FF8C00' fill-opacity='0.3'/%3E%3Cpath d='M30 70L45 100L15 100Z' fill='%23FF8C00' fill-opacity='0.5'/%3E%3Cpath d='M80 20L95 50L65 50Z' fill='%23FF8C00' fill-opacity='0.35'/%3E%3C/svg%3E"),
-  /* Layer 2 (Bottom): base radial gradient */
-  radial-gradient(circle at center, #FFEA00 0%, #FFD700 60%, #B8860B 100%);
-  background-size: 100px 100px, 100% 100%;
-  background-repeat: repeat, no-repeat;
-}
 
 /* Dialog system styles */
 #dialogContent {
@@ -252,13 +210,15 @@ body {
   align-items: center;
   justify-content: center;
   opacity: 1;
+  gap: 1vh;
   transition: opacity 0.25s ease;
 }
 
 .dialog-standard-text {
+  margin-bottom: 3vh;
   color: #374151; /* dark grey */
-  font-size: 30px;
-  line-height: 1.3;
+  font-size: clamp(2.5rem, 6vh, 4vw);
+  line-height: 1.25;
   white-space: pre-line; /* respect \n as line breaks */
 }
 
@@ -269,7 +229,7 @@ body {
   width: 100%;
   text-align: right;
   color: #374151;
-  font-size: 1.25rem;
+  font-size: clamp(2rem, 4.8vh, 3.2vw);
   font-weight: 700;
   pointer-events: none;
 }
@@ -288,7 +248,9 @@ body {
   padding: 10px 20px;
   min-width: 220px;
   border-radius: 20px;
-  font-size: 30px;
+    /* Responsive font size: same clamp logic as dialog text */
+  font-size: clamp(2rem, 6vh, 3vw);
+
   text-align: center;
   box-shadow: 0 6px 0 rgba(55, 65, 81, 0.25);
   transform: translateY(-4px);
@@ -331,11 +293,21 @@ body {
   background-color: #de3163;
   color: #ffffff;
   border: 5px solid #374151;
+  opacity: 0.6;
 }
 
+.tutorial-close-button .front:hover{
+  opacity: 1;
+}
 .tutorial-nav-button .front {
   background-color: #f3f0e0;
   color: #374151;
+  border: 5px solid #374151;
+}
+
+.tutorial-replay-button .front {
+  background-color: #f97316; /* orange */
+  color: #ffffff;
   border: 5px solid #374151;
 }
 
@@ -344,3 +316,4 @@ body {
   color: #ffffff;
   border: 5px solid #374151;
 }
+

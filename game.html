@@ -6,36 +6,48 @@
   <meta http-equiv="Expires" content="0">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>菠蘿熊排序遊戲 - 2.5D 叢林背景</title>
+    <title>菠蘿熊排序遊戲 - 2.5D 叢林背景</title>
   <link rel="stylesheet" href="./game_style.css" />
+  <link rel="preload" href="./pineapple_hammer.png" as="image" />
   <!-- 使用 Tailwind CDN 以支援原本的樣式類別 -->
   <script src="https://cdn.tailwindcss.com"></script>
+
 </head>
 <body>
   <!-- 2.5D Jungle Canvas Background -->
   <canvas id="gameCanvas"></canvas>
 
-  <!-- Hidden SFX audio elements (trigger from game_script.js) -->
+    <!-- Hidden SFX audio elements (trigger from game_script.js) -->
   <audio id="sfxPlaceCorrect" src="./place_correct.mp3" preload="auto" style="display: none;"></audio>
   <audio id="sfxPlaceWrong" src="./place_wrong.mp3" preload="auto" style="display: none;"></audio>
   <audio id="sfxCorrectHappy" src="./correct_happy.mp3" preload="auto" style="display: none;"></audio>
+  <audio id="sfxMiddleLevelSuccess" src="./middle_level_success.mp3" preload="auto" style="display: none;"></audio>
   
   <!-- Pineapple Bear Image -->
-  <img
+
+    <img
     id="pineappleBearImage"
     src="./pineapple_bear.png"
     alt="菠蘿熊圖片"
-    style="position: fixed; top: 45%; left: 7.5%; transform: scale(0.15); transform-origin: top left; pointer-events: none;"
+    style="position: fixed; left: 20px; bottom: 20px; height: 25vh; width: auto; transform: none; transform-origin: bottom left; pointer-events: none;"
   />
+
 
   <img
     id="yellowBubbleImage"
     src="./yellow_bubble.png"
     alt="黃色對話泡泡"
-    style="position: fixed; pointer-events: none; display: none; z-index: 10; transform: translateY(-90%) translateX(-2.5%) scale(0.4); transform-origin: bottom left;"
+    style="position: fixed; pointer-events: none; display: none; z-index: 5; transform: translateY(-90%) translateX(-2.5%) scale(0.4); transform-origin: bottom left; opacity: 0.9;"
   />
-  <div id="yellowBubbleText" aria-live="polite" aria-atomic="true"></div>
-  
+    <div id="yellowBubbleText" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Descending-mode start hint (arrow + label) -->
+  <img
+    id="descendingStartArrow"
+    src="./down_arrow.png"
+    alt="下降模式起點箭頭"
+  />
+  <div id="descendingStartLabel">從這裏開始</div>
 
   <!-- Top-left slide-out menu arrow -->
   <button
@@ -44,11 +56,8 @@
     onclick="returnToMenu()"
     type="button"
   >
-    <span class="menu-arrow-tip">
-      ↩
-    </span>
     <span class="menu-arrow-label">
-      🏠 返回菜單
+      <span style="font-size:2em">🏠</span> 返回菜單
     </span>
   </button>
     <div id="gameShell" class="game-shell max-w-3xl mx-auto">
@@ -56,7 +65,8 @@
     <header class="game-header">
       <h1
         id="gameTitle"
-        class="text-2xl md:text-4xl font-bold text-center text-amber-600 drop-shadow-sm"
+        class="font-bold text-center text-amber-600 drop-shadow-sm"
+        style="font-size:clamp(2rem, 3vw, 5rem)"
       >
         🍍 菠蘿熊排序遊戲 🍍
       </h1>
@@ -67,7 +77,8 @@
       </span>
             <span
         id="orderInfo"
-        class="text-xl md:text-2xl font-bold text-amber-600 drop-shadow-sm"
+        class="font-bold text-amber-600 drop-shadow-sm"
+        style="font-size:clamp(1.5rem, 2.5vw, 4rem)"
       ></span>
       <span
         class="mx-4 text-2xl md:text-4xl font-bold text-amber-600 drop-shadow-sm"
@@ -76,7 +87,8 @@
       </span>
             <span
         id="difficultyInfo"
-        class="text-xl md:text-2xl font-bold text-amber-600 drop-shadow-sm"
+        class="font-bold text-amber-600 drop-shadow-sm"
+        style="font-size:clamp(1.5rem, 2.5vw, 4rem)"
       ></span>
     </header>
 
@@ -93,20 +105,47 @@
         class="flex flex-wrap justify-center gap-3 md:gap-4 mb-6"
       ></div>
 
-      <!-- 格仔區 -->
-      <div class="flex justify-center items-center gap-3 md:gap-6 mb-2 flex-wrap">
+            <!-- 格仔區 -->
+      <div
+        id="slotsAndArrowContainer"
+        class="flex flex-col items-center gap-3 md:gap-6 mb-2 flex-wrap"
+      >
         <div
           id="slots"
           class="flex flex-wrap justify-center gap-2 md:gap-3"
         ></div>
+
+        <div
+          id="bottomModeArrowStrip"
+          class="flex items-center justify-center"
+          aria-hidden="true"
+        >
+          <span class="text-3xl">小</span>
+          <svg
+            id="bottomArrowRight"
+            class="bottom-mode-arrow"
+            viewBox="0 0 1000 120"
+            preserveAspectRatio="none"
+            role="presentation"
+          >
+            <rect x="10" y="45" width="870" height="30" rx="8" ry="8"></rect>
+            <polyline points="840,16 980,60 840,104"></polyline>
+          </svg>
+          <svg
+            id="bottomArrowLeft"
+            class="bottom-mode-arrow hidden"
+            viewBox="0 0 1100 120"
+            preserveAspectRatio="none"
+            role="presentation"
+          >
+            <rect x="140" y="45" width="950" height="30" rx="8" ry="8"></rect>
+            <polyline points="160,16 20,60 160,104"></polyline>
+          </svg>
+          <span class="text-6xl">大</span>
+        </div>
       </div>
 
-            <!-- 結果顯示 -->
 
-      <div
-        id="result"
-        class="text-xl md:text-3xl font-bold text-center mb-6"
-      ></div>
 
       <!-- 寶箱 -->
       <div id="treasure" class="hidden mb-6">
@@ -141,47 +180,52 @@
     </div>
   </div>
 
-  <!-- 勝利模態 -->
+        <!-- 勝利模態 -->
   <div id="victoryModal" class="modal-overlay hidden">
     <div class="modal-content">
-      <p class="text-4xl md:text-5xl font-bold text-green-600 mb-6">
-        🎉 做得好！
-      </p>
+      <p id="victoryMessage" class="victory-message mb-8"></p>
+      <div id="victoryButtons" class="victory-buttons">
+        <button
+          id="victoryPrimaryButton"
+          type="button"
+          class="victory-button"
+        ></button>
+        <button
+          id="victorySecondaryButton"
+          type="button"
+          class="victory-button hidden"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reward overlay for pineapple hammer -->
+  <div id="rewardOverlay" class="reward-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="rewardText">
+    <div class="reward-overlay-content">
+      <div id="rewardHammerContainer" class="reward-hammer-container">
+        <img
+          id="rewardHammerImage"
+          src="./pineapple_hammer.png"
+          alt="菠蘿錘"
+          class="reward-hammer-image"
+        />
+        <div id="rewardHammerRays" class="reward-hammer-rays" aria-hidden="true"></div>
+      </div>
+      <p id="rewardText" class="reward-text">恭喜你獲得了菠蘿錘</p>
       <button
-        onclick="closeVictoryModal()"
-        class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-full text-xl"
+        id="rewardClaimButton"
+        type="button"
+        class="pushable-button dialog-choice-button reward-claim-button"
       >
-        繼續玩 🎮
+        <span class="front">領取獎賞</span>
       </button>
     </div>
   </div>
 
-  <div id="bottomModeArrowStrip" class="flex items-center justify-center" aria-hidden="true">
-    <span class="text-3xl">小</span>
-    <svg
-      id="bottomArrowRight"
-      class="bottom-mode-arrow"
-      viewBox="0 0 1000 120"
-      preserveAspectRatio="none"
-      role="presentation"
-    >
-      <rect x="10" y="45" width="870" height="30" rx="8" ry="8"></rect>
-      <polyline points="840,16 980,60 840,104"></polyline>
-    </svg>
-    <svg
-      id="bottomArrowLeft"
-      class="bottom-mode-arrow hidden"
-      viewBox="0 0 1100 120"
-      preserveAspectRatio="none"
-      role="presentation"
-    >
-      <rect x="140" y="45" width="950" height="30" rx="8" ry="8"></rect>
-      <polyline points="160,16 20,60 160,104"></polyline>
-    </svg>
-    <span class="text-6xl">大</span>
-  </div>
 
-  <script src="./game_script.js"></script>
+    <script src="./game_script.js"></script>
+
+
   <script>
     (function () {
       function playAudioById(id) {
@@ -214,8 +258,9 @@
       function positionBubble() {
         if (!bear || !bubble) return;
         const rect = bear.getBoundingClientRect();
+        const bubbleRect = bubble.getBoundingClientRect();
         bubble.style.left = `${rect.right}px`;
-        bubble.style.top = `${rect.top}px`;
+        bubble.style.top = `${rect.top + rect.height / 2}px`;
         bubble.style.display = 'block';
 
         if (bubbleText) {

@@ -5,10 +5,18 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>菠蘿熊排序遊戲 - 主選單</title>
   <link rel="stylesheet" href="./menu_style.css" />
+
+  <!-- Preload tutorial narration audio files -->
+  <link rel="preload" as="audio" href="tut_1oo4.mp3" />
+  <link rel="preload" as="audio" href="tut_2oo4.mp3" />
+  <link rel="preload" as="audio" href="tut_3oo4.mp3" />
+  <link rel="preload" as="audio" href="tut_4oo4.mp3" />
+
   <script src="https://cdn.tailwindcss.com"></script>
+
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
@@ -34,30 +42,34 @@
     style="position: fixed; top: 70%; left: 50%; transform-origin: top left; object-position: top center; pointer-events: none;"
   ></video>
 
-
-  <div id="menu" class="menu-container">
-    <div class="menu-arrow pineapple-box">🍍菠蘿島任務1
-
-      排序遊戲
-    </div>
-  </div>
+    <header class="game-header">
+    <h1
+      class="font-bold text-center text-amber-600 drop-shadow-sm"
+      style="font-size:5vh"
+    >
+      🍍菠蘿島任務1  排序遊戲
+    </h1>
+  </header>
   
-    <div id="menuShell" class="game-shell max-w-3xl mx-auto flex flex-col items-center justify-center min-h-screen">
-    <h1 id="gameTitle" class="text-4xl md:text-5xl font-bold text-center mb-8 text-amber-600 drop-shadow-md bg-white/80 px-8 py-5 rounded-3xl shadow-lg">
+    <div id="menuShell" class="game-shell mx-auto flex flex-col items-center justify-center min-h-screen" style="width: 75vw;">
+
+    <h1 id="gameTitle" class="font-bold text-center mb-8 text-amber-600 drop-shadow-md bg-white/80 px-8 py-5 rounded-3xl shadow-lg" style="font-size: 5cqw">
       🍍菠蘿島任務1：排序遊戲
     </h1>
 
                 <!-- 中央透明提示框 -->
     <div
       id="infoBox"
-      class="fixed top-[20%] left-1/2 -translate-x-1/2 bg-[#fffff0] border-4 border-[#fada5e] rounded-2xl shadow-xl px-6 py-4 opacity-0 pointer-events-none transition-opacity duration-100 min-w-[70vw] min-h-[40vh]"
+      class="fixed left-1/2 -translate-x-1/2 bg-[#fffff0] border-4 border-[#fada5e] rounded-2xl shadow-xl px-6 py-4 opacity-0 pointer-events-none transition-opacity duration-100 min-w-[70vw] min-h-[40vh]"
+      style="top:clamp(150px,20%,20%);"
     >
       <!-- 左上角標籤 -->
       <div id="speakerLabelContainer" class="absolute left-0 top-0 -translate-y-full transform">
-        <div class="bg-[#f4c430] px-3 py-4 flex items-center rounded-t-md w-[10vw]">
+        <div class="bg-[#f4c430] px-3 py-4 flex items-center rounded-t-md" style="width: 20cqw">
           <span
             id="speakerLabel"
-            class="text-white text-[24px] leading-none text-center w-full"
+            class="text-white leading-none text-center w-full"
+            style="font-size:4cqw;"
           >
             菠蘿熊
           </span>
@@ -104,9 +116,10 @@
           <span class="front">⬅️上一頁</span>
         </button>
 
-        <span
+                <span
           id="tutorialPageIndicator"
           class="text-xl text-gray-700"
+          style="font-size: clamp(2.5rem, 6vh, 4vw);"
         >
           第 1/4 頁
         </span>
@@ -120,33 +133,30 @@
         </button>
 
         <button
+          id="tutorialReplayButton"
+          type="button"
+          class="tutorial-replay-button pushable-button hidden"
+        >
+          <span class="front">🔄再看一遍</span>
+        </button>
+
+        <button
           id="tutorialFinishButton"
           type="button"
           class="tutorial-finish-button pushable-button hidden"
         >
           <span class="front">✅完成教程</span>
         </button>
+
       </div>
     </div>
 
 
-    <div id="menuOptions" class="bg-white/90 rounded-3xl p-6 md:p-8 shadow-xl mb-8 flex flex-col items-center gap-4 w-full max-w-md hidden">
+      
+      </div>
 
-        <h2 class="text-2xl font-bold text-amber-800 mb-2">選擇模式</h2>
-        <div class="flex gap-4 w-full justify-center">
-            <button class="mode-btn w-full" onclick="selectMode('ascending')">小 → 大</button>
-            <button class="mode-btn w-full" onclick="selectMode('descending')">大 → 小</button>
-        </div>
-
-        <div id="difficultySelection" class="mt-4 flex flex-col items-center gap-4 w-full hidden transition-all">
-            <h2 class="text-2xl font-bold text-amber-800 mb-2">選擇難度</h2>
-            <div class="flex gap-4 w-full justify-center">
-                <button class="difficulty-btn easy w-full" onclick="startGame('easy')">⭐ 1-10</button>
-                <button class="difficulty-btn hard w-full" onclick="startGame('hard')">⭐⭐ 1-20</button>
-            </div>
-        </div>
-    </div>
-  </div>
+  <!-- Shared audio element for tutorial page narration -->
+  <audio id="tutorialAudioPlayer" preload="auto"></audio>
 
   <script src="./menu_script.js"></script>
 </body>
