@@ -62,13 +62,12 @@ body {
 }
 
 
-/* Hide the shared tutorial audio player (no visual controls) */
-#tutorialAudioPlayer {
-  display: none;
-}
+
+/* Tutorial audio elements are hidden via inline styles on the <audio> tags. */
 
 /* Full-screen jungle canvas background */
 #gameCanvas {
+
 
   position: fixed;
   inset: 0;
@@ -316,4 +315,44 @@ body {
   color: #ffffff;
   border: 5px solid #374151;
 }
+
+/* Tutorial window layout: header (close button), content, footer */
+#tutorialWindow {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure content area does not scroll and is vertically centered */
+#tutorialContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* prevent scrollbars inside the tutorial */
+}
+
+/* Header and footer should not shrink away */
+.tutorial-header {
+  flex-shrink: 0;
+}
+
+#tutorialFooter {
+  flex-shrink: 0;
+}
+
+/* Ensure hidden utility always wins for tutorial modal elements */
+#tutorialOverlay.hidden,
+#tutorialWindow.hidden {
+  display: none !important;
+}
+
+/* Text blocks inside tutorial pages that can be auto-fitted */
+.tutorial-text-block {
+  margin-top: 0.5rem;
+  color: #374151;
+  font-size: clamp(2.5rem, 6vh, 4vw);
+  line-height: 1.3;
+  white-space: pre-line;
+}
+
 

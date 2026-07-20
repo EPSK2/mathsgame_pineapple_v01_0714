@@ -91,23 +91,34 @@
       id="tutorialWindow"
       class="fixed top-[5%] left-[5%] right-[5%] bottom-[5%] bg-[#fffff0] border-4 border-[#fada5e] rounded-2xl shadow-xl px-6 py-4 hidden z-[1900] flex flex-col"
     >
-      <!-- 關閉按鈕 -->
-      <button
-        id="tutorialCloseButton"
-        type="button"
-        class="tutorial-close-button pushable-button absolute top-3 right-4"
+            <!-- 教學視窗標題列（關閉按鈕置於右側） -->
+      <div
+        id="tutorialHeader"
+        class="tutorial-header flex items-start justify-end mb-2"
       >
-        <span class="front">退出❌</span>
-      </button>
+        <button
+          id="tutorialCloseButton"
+          type="button"
+          class="tutorial-close-button pushable-button"
+        >
+          <span class="front">退出❌</span>
+        </button>
+      </div>
 
-      <!-- 教學內容主區 -->
+
+            <!-- 教學內容主區 -->
       <div
         id="tutorialContent"
-        class="flex-1 flex items-center justify-center text-center px-4 py-4 overflow-y-auto"
+        class="flex-1 flex items-center justify-center text-center px-4 py-4"
       ></div>
 
-      <!-- 底部導航列 -->
-      <div class="mt-4 flex items-center justify-center gap-4">
+
+            <!-- 底部導航列 -->
+      <div
+        id="tutorialFooter"
+        class="mt-4 flex items-center justify-center gap-4"
+      >
+
         <button
           id="tutorialPrevButton"
           type="button"
@@ -155,8 +166,11 @@
       
       </div>
 
-  <!-- Shared audio element for tutorial page narration -->
-  <audio id="tutorialAudioPlayer" preload="auto"></audio>
+    <!-- Tutorial narration audio elements (one per page) -->
+  <audio src="tut_1oo4.mp3" preload="auto" style="display:none;"></audio>
+  <audio src="tut_2oo4.mp3" preload="auto" style="display:none;"></audio>
+  <audio src="tut_3oo4.mp3" preload="auto" style="display:none;"></audio>
+  <audio src="tut_4oo4.mp3" preload="auto" style="display:none;"></audio>
 
   <script src="./menu_script.js"></script>
 </body>

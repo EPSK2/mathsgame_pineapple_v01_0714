@@ -48,7 +48,7 @@ body {
 /* Descending-mode start hint (arrow + label) */
 #descendingStartArrow {
   position: fixed;
-  width: 4vw;
+  width: 6vw;
   height: auto;
   pointer-events: none;
   z-index: 160; /* above clouds & bottom arrow, below victory modal */
@@ -61,7 +61,7 @@ body {
   position: fixed;
   /* Prefer horizontal text: allow width to grow while keeping a minimum target of ~4vw */
   width: auto;
-  min-width: 4vw;
+  min-width: 5vw;
   max-width: 140px;
   padding: 4px 6px;
   box-sizing: border-box;
@@ -78,50 +78,13 @@ body {
   pointer-events: none;
   z-index: 160;
   display: none;
-  transform: translate(-50%, 0) scale(1);
+  transform: translate(-50%, 0) scale(1.5);
   transform-origin: center center;
 }
 
 
-/* One-off classes used by JS to trigger the 1s animations every 3s. */
-.descending-arrow-spin {
-  animation: descendingArrowSpin 1s ease-in-out;
-}
-
-.descending-label-pulse {
-  animation: descendingLabelPulse 1s ease-in-out;
-}
-
 .descending-hint-fade-out {
   animation: descendingHintFadeOut 1s ease-out forwards;
-}
-
-@keyframes descendingArrowSpin {
-  0% {
-    transform: translate(-50%, 0) rotateY(0deg);
-    filter: none;
-  }
-  50% {
-    transform: translate(-50%, 0) rotateY(180deg);
-    /* subtle smear while the arrow is edge-on */
-    filter: blur(1px);
-  }
-  100% {
-    transform: translate(-50%, 0) rotateY(360deg);
-    filter: none;
-  }
-}
-
-@keyframes descendingLabelPulse {
-  0% {
-    transform: translate(-50%, 0) scale(1);
-  }
-  50% {
-    transform: translate(-50%, 0) scale(1.5);
-  }
-  100% {
-    transform: translate(-50%, 0) scale(1);
-  }
 }
 
 @keyframes descendingHintFadeOut {
@@ -267,7 +230,7 @@ body {
   display: block;
   width: 100%;
   height: auto;
-  pointer-events: none;
+  pointer-events: auto;
   position: relative;
   z-index: 1;
   transform: scale(1.7);           /* ← add this line */

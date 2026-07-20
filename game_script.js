@@ -91,7 +91,8 @@ const images = {
 };
 
 // Use provided assets
-images.jungleBg.src = "./grass_02.png"; //"https://wallpaperaccess.com/full/4990824.png";
+images.jungleBg.src = "./grass_02.png";
+//images.jungleBg.src = "https://wallpaperaccess.com/full/4990824.png";
 images.tree.src = "./tree.png";
 images.leaf.src = "./leaf.png";
 images.tallTree.src = "./tall_tree.png";
@@ -1849,7 +1850,7 @@ let gameState = {
 };
 
 // Hidden multi-level run state (三個關卡一輪，學生看不到等級指示)
-const LEVELS_PER_RUN = 1;
+const LEVELS_PER_RUN = 3;
 const ATTEMPT_COOKIE_NAME = "pb_sort_attempt";
 let runState = {
   modeKey: null,
@@ -2313,21 +2314,7 @@ function startDescendingHintAnimations() {
 
   const mode = (gameState && gameState.mode) || "ascending";
   if (mode !== "descending" || descendingHintFadedOut) return;
-
-  const pulse = () => {
-    arrow.classList.add("descending-arrow-spin");
-    label.classList.add("descending-label-pulse");
-    window.setTimeout(() => {
-      arrow.classList.remove("descending-arrow-spin");
-      label.classList.remove("descending-label-pulse");
-    }, 1000);
-  };
-
-  // fire once immediately so students notice the hint quickly
-  pulse();
-
   stopDescendingHintAnimations();
-  descendingHintTimer = window.setInterval(pulse, 3000);
 }
 
 function ensureDescendingHint() {
@@ -2345,7 +2332,7 @@ function ensureDescendingHint() {
   label.style.opacity = "1";
 
   updateDescendingHintLayout();
-  startDescendingHintAnimations();
+  stopDescendingHintAnimations();
 }
 
 function fadeOutDescendingHintOnceFirstPlacement() {
@@ -2357,9 +2344,6 @@ function fadeOutDescendingHintOnceFirstPlacement() {
 
   descendingHintFadedOut = true;
   stopDescendingHintAnimations();
-
-  arrow.classList.remove("descending-arrow-spin");
-  label.classList.remove("descending-label-pulse");
 
   arrow.classList.add("descending-hint-fade-out");
   label.classList.add("descending-hint-fade-out");
@@ -2467,14 +2451,14 @@ function showRewardOverlay() {
   // Start rays once the hammer pop animation has completed
   rewardRayStartTimeoutId = window.setTimeout(() => {
     startRewardRays();
-  }, 3800);
+  }, 1800);
 
   // Reveal the claim button only when the reward text starts fading in
   rewardClaimRevealTimeoutId = window.setTimeout(() => {
     if (rewardClaimButton) {
       rewardClaimButton.classList.add("reward-claim-visible");
     }
-  }, 4000);
+  }, 3000);
 
 
   if (rewardClaimButton) {
@@ -3492,7 +3476,7 @@ function completeGame() {
       bear.style.zIndex = "10000";
     }
     showVictoryModal();
-  }, 2000);
+  }, 1000);
 }
 
 
@@ -3682,7 +3666,7 @@ function showVictoryModal() {
     }
 
     if (secondaryBtn) {
-      secondaryBtn.textContent = "🏠 回到菜單";
+      secondaryBtn.textContent = "🏠 返回菜單";
       secondaryBtn.onclick = handleReturnToMenuClick;
       secondaryBtn.className =
         "victory-button victory-button-secondary-menu";

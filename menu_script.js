@@ -17,7 +17,11 @@ window.addEventListener("resize", () => {
   if (typeof sunshineEffect !== "undefined" && sunshineEffect) {
     sunshineEffect.handleResize();
   }
+  if (isTutorialOpen) {
+    fitTutorialContent();
+  }
 });
+
 
 // Image assets
 const images = {
@@ -43,9 +47,9 @@ const layers = {
 };
 
 const particleConfigs = {
-  numLeavesAmbient: 50,
-  numLeavesTreePerSide: 50,
-  numLeavesSky: 25,
+  numLeavesAmbient: 10,
+  numLeavesTreePerSide: 0,
+  numLeavesSky: 10,
   minLeafSize: 20,
   maxLeafSize: 40,
   windFrequency: 0.005,
@@ -509,9 +513,10 @@ function startGame(difficulty) {
 let nextPageAudio = null;
 let selectAudio = null;
 
-// Tutorial audio player (shared for all tutorial pages)
-let tutorialAudioPlayer = null;
+// Tutorial audio players (one per page)
+let tutorialAudioElements = [];
 let tutorialAudioTimeoutId = null;
+
 
 
 function playNextPageSound() {
@@ -544,6 +549,8 @@ let isTutorialOpen = false;
 let tutorialOverlay = null;
 let tutorialWindow = null;
 let tutorialContent = null;
+let tutorialHeader = null;
+let tutorialFooter = null;
 let tutorialPrevButton = null;
 let tutorialNextButton = null;
 let tutorialReplayButton = null;
@@ -553,61 +560,73 @@ let tutorialCloseButton = null;
 let currentTutorialPage = 0;
 
 
+
 // Developers: put tutorial page HTML content here.
 // Each entry is injected as innerHTML into the main tutorial content area.
 const tutorialPages = [
   `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
       <img style="max-height: 30vh; height: auto; width: auto;" src="ins01.png">
-      <div class="leading-tight text-gray-700 whitespace-pre-line" style="font-size: clamp(2.5rem, 6vh, 4vw);">
+      <div class="tutorial-text-block leading-tight text-gray-700 whitespace-pre-line">
         遊戲場地內有 <b>5</b> 朵雲，印著不同的數字。
       </div>
     </div>
   `,
   `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.1rem;">
-      <img style="max-height: 30vh; height: auto; width: auto;" src="ins02.png">
-      <div class="leading-relaxed text-gray-700 whitespace-pre-line" style="font-size: clamp(2.5rem, 6vh, 4vw);">
-        如果箭頭指向 <span class="text-6xl">右 ➡➡➡</span>，
+      <img style="max-height: 20vh; height: auto; width: auto;" src="ins02.png">
+      <div class="tutorial-text-block leading-relaxed text-gray-700 whitespace-pre-line">
+        如果箭嘴指向 <span class="text-6xl">➡</span>，
         就需要把數字從 <span class="text-3xl">小</span> 到 <span class="text-6xl">大</span> 排列。
       </div>
     </div>
   `,
   `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.1rem;">
-      <img style="max-height: 30vh; height: auto; width: auto;" src="ins03.png">
-      <div class="leading-relaxed text-gray-700 whitespace-pre-line" style="font-size: clamp(2.5rem, 6vh, 4vw);">
-        如果箭頭指向 <span class="text-6xl">左 ⬅⬅⬅</span>，
+      <img style="max-height: 20vh; height: auto; width: auto;" src="ins03.png">
+      <div class="tutorial-text-block leading-relaxed text-gray-700 whitespace-pre-line">
+        如果箭嘴指向 <span class="text-6xl">⬅</span>，
         就需要把數字從 <span class="text-6xl">大</span> 到 <span class="text-3xl">小</span> 排列。
       </div>
     </div>
   `,
   `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.1rem;">
-      <video src="ins04.webm" muted loop autoplay style="max-height: 50vh; height: auto; width: auto;"></video>
-      <div class="leading-relaxed text-gray-700 whitespace-pre-line" style="font-size: clamp(2.5rem, 6vh, 4vw);">用手指/滑鼠按住雲朵，拖動到正確位置上！</div>
+      <video src="ins04.webm" muted loop autoplay style="max-height: 40vh; height: auto; width: auto;"></video>
+      <div class="tutorial-text-block leading-relaxed text-gray-700 whitespace-pre-line">用手指/滑鼠按住雲朵，拖動到正確位置上！</div>
     </div>
   `,
 ];
+
 
 
 function initTutorialUI() {
   tutorialOverlay = document.getElementById("tutorialOverlay");
   tutorialWindow = document.getElementById("tutorialWindow");
   tutorialContent = document.getElementById("tutorialContent");
+  tutorialHeader = document.getElementById("tutorialHeader");
+  tutorialFooter = document.getElementById("tutorialFooter");
   tutorialPrevButton = document.getElementById("tutorialPrevButton");
   tutorialNextButton = document.getElementById("tutorialNextButton");
   tutorialReplayButton = document.getElementById("tutorialReplayButton");
   tutorialFinishButton = document.getElementById("tutorialFinishButton");
   tutorialPageIndicator = document.getElementById("tutorialPageIndicator");
   tutorialCloseButton = document.getElementById("tutorialCloseButton");
-  tutorialAudioPlayer = document.getElementById("tutorialAudioPlayer");
+
+
+  // Collect dedicated tutorial audio elements (one per page)
+  tutorialAudioElements = Array.from(
+    document.querySelectorAll('audio[src^="tut_"][src$="oo4.mp3"]')
+  );
+
 
 
   if (
     !tutorialOverlay ||
     !tutorialWindow ||
     !tutorialContent ||
+    !tutorialHeader ||
+    !tutorialFooter ||
     !tutorialPrevButton ||
     !tutorialNextButton ||
     !tutorialReplayButton ||
@@ -619,10 +638,12 @@ function initTutorialUI() {
   }
 
 
+
   // 阻止點擊遮罩穿透到底層
   tutorialOverlay.addEventListener("click", (event) => {
     event.stopPropagation();
     event.preventDefault();
+    closeTutorial();
   });
 
   const handleClose = (event) => {
@@ -658,6 +679,21 @@ function initTutorialUI() {
     currentTutorialPage = 0;
     renderTutorialPage();
   });
+
+  // Force deterministic initial state so tutorial never appears on first load.
+  setTutorialVisibility(false);
+}
+
+function setTutorialVisibility(visible) {
+  if (tutorialOverlay) {
+    tutorialOverlay.classList.toggle("hidden", !visible);
+    tutorialOverlay.style.display = visible ? "block" : "none";
+  }
+
+  if (tutorialWindow) {
+    tutorialWindow.classList.toggle("hidden", !visible);
+    tutorialWindow.style.display = visible ? "flex" : "none";
+  }
 }
 
 
@@ -672,60 +708,126 @@ function openTutorial(startPage = 0) {
   }
 
   isTutorialOpen = true;
-  // Always start from first page (do not remember last visit)
-  currentTutorialPage = 0;
+  const safeStartPage = Number.isFinite(startPage)
+    ? Math.max(0, Math.min(tutorialPages.length - 1, Math.floor(startPage)))
+    : 0;
+  currentTutorialPage = safeStartPage;
 
-  tutorialOverlay.classList.remove("hidden");
-  tutorialWindow.classList.remove("hidden");
+  setTutorialVisibility(true);
   renderTutorialPage();
 }
 
 function closeTutorial() {
   isTutorialOpen = false;
-  if (tutorialOverlay) {
-    tutorialOverlay.classList.add("hidden");
-  }
-  if (tutorialWindow) {
-    tutorialWindow.classList.add("hidden");
-  }
-  // Stop any pending tutorial audio playback and reset
+  setTutorialVisibility(false);
+    // Stop any pending tutorial audio playback and reset
   if (tutorialAudioTimeoutId) {
     clearTimeout(tutorialAudioTimeoutId);
     tutorialAudioTimeoutId = null;
   }
-  if (tutorialAudioPlayer) {
-    try {
-      tutorialAudioPlayer.pause();
-      tutorialAudioPlayer.currentTime = 0;
-    } catch (e) {
-      console.error("Failed to stop tutorial audio", e);
-    }
+  if (tutorialAudioElements && tutorialAudioElements.length) {
+    tutorialAudioElements.forEach((player) => {
+      try {
+        player.pause();
+        player.currentTime = 0;
+      } catch (e) {
+        console.error("Failed to stop tutorial audio", e);
+      }
+    });
   }
 }
 
 function playTutorialPageAudio(pageNumber) {
-  if (!tutorialAudioPlayer) return;
+  if (!tutorialAudioElements || !tutorialAudioElements.length) return;
 
-  const src = `tut_${pageNumber}oo4.mp3`;
+  const index = pageNumber - 1;
+  const player = tutorialAudioElements[index];
+  if (!player) return;
+
+  // Stop any other tutorial audio that might be playing
+  tutorialAudioElements.forEach((audioEl) => {
+    if (audioEl !== player) {
+      try {
+        audioEl.pause();
+        audioEl.currentTime = 0;
+      } catch (e) {
+        // Ignore errors when stopping other audio elements
+      }
+    }
+  });
 
   try {
-    tutorialAudioPlayer.pause();
-    tutorialAudioPlayer.currentTime = 0;
+    if (player.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      player.currentTime = 0;
+      player.play().catch(() => {});
+    } else {
+      player.load();
+      player.play().catch(() => {});
+    }
   } catch (e) {
-    // Ignore errors when resetting audio
+    console.error("Failed to play tutorial page audio", e);
   }
+}
 
-  // If the same source is already loaded, just play it
-  if (tutorialAudioPlayer.dataset.currentSrc === src && tutorialAudioPlayer.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-    tutorialAudioPlayer.play().catch(() => {});
+
+function fitTutorialContent() {
+  if (!tutorialWindow || !tutorialContent || !tutorialHeader || !tutorialFooter) {
     return;
   }
 
-  tutorialAudioPlayer.src = src;
-  tutorialAudioPlayer.dataset.currentSrc = src;
-  tutorialAudioPlayer.load();
-  tutorialAudioPlayer.play().catch(() => {});
+  // Only auto-fit when tutorial window is visible
+  const isHidden =
+    tutorialWindow.classList.contains("hidden") ||
+    tutorialWindow.style.display === "none";
+  if (isHidden) {
+    return;
+  }
+
+  const windowHeight = tutorialWindow.clientHeight;
+  if (!windowHeight) {
+    return;
+  }
+
+  // Reset text font size to a reasonable starting value
+  const textBlocks = tutorialContent.querySelectorAll(".tutorial-text-block");
+  if (!textBlocks.length) {
+    return;
+  }
+
+  let fontSize = 26; // px
+  const minFontSize = 16;
+  textBlocks.forEach((block) => {
+    block.style.fontSize = fontSize + "px";
+  });
+
+  // Compute available height for the content area
+  const headerHeight = tutorialHeader.offsetHeight || 0;
+  const footerHeight = tutorialFooter.offsetHeight || 0;
+
+  const contentStyles = window.getComputedStyle(tutorialContent);
+  const paddingTop = parseFloat(contentStyles.paddingTop) || 0;
+  const paddingBottom = parseFloat(contentStyles.paddingBottom) || 0;
+
+  const extraMargin = 16; // safety margin
+  const availableHeight =
+    windowHeight - headerHeight - footerHeight - paddingTop - paddingBottom - extraMargin;
+
+  let iterations = 0;
+  const maxIterations = 20;
+
+  while (
+    tutorialContent.scrollHeight > availableHeight &&
+    fontSize > minFontSize &&
+    iterations < maxIterations
+  ) {
+    fontSize -= 1;
+    textBlocks.forEach((block) => {
+      block.style.fontSize = fontSize + "px";
+    });
+    iterations += 1;
+  }
 }
+
 
 function renderTutorialPage() {
 
@@ -775,7 +877,12 @@ function renderTutorialPage() {
       playTutorialPageAudio(pageNumber);
     }
   }, 500);
+
+  if (isTutorialOpen) {
+    fitTutorialContent();
+  }
 }
+
 
 
 
