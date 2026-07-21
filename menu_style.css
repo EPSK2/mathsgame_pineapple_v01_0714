@@ -23,9 +23,7 @@ body {
   radial-gradient(circle at center, #FFEA00 0%, #FFD700 60%, #B8860B 100%);
   background-size: 100px 100px, 100% 100%;
   background-repeat: repeat, no-repeat;
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.35);
   z-index: 100;
-  border-radius: 20px;
   /* hidden / off-screen initially */
   transform: translateX(-100%);
   opacity: 0;

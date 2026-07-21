@@ -93,8 +93,8 @@ const images = {
 };
 
 // Use provided assets
-//images.jungleBg.src = "./grass_02.png";
-images.jungleBg.src = "https://wallpaperaccess.com/full/4990824.png";
+images.jungleBg.src = "./grass_02.png";
+//images.jungleBg.src = "https://wallpaperaccess.com/full/4990824.png";
 images.tree.src = "./tree.png";
 images.leaf.src = "./leaf.png";
 images.tallTree.src = "./tall_tree.png";
