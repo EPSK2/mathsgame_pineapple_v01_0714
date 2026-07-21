@@ -74,8 +74,10 @@ window.addEventListener("resize", () => {
   updateNumberTilePositions();
   updateBottomModeArrowLayout();
   updateDescendingHintLayout();
+  updateAscendingHintLayout();
   updateAllSuccessSlotCloudLayouts();
 });
+
 
 
 
@@ -91,8 +93,8 @@ const images = {
 };
 
 // Use provided assets
-images.jungleBg.src = "./grass_02.png";
-//images.jungleBg.src = "https://wallpaperaccess.com/full/4990824.png";
+//images.jungleBg.src = "./grass_02.png";
+images.jungleBg.src = "https://wallpaperaccess.com/full/4990824.png";
 images.tree.src = "./tree.png";
 images.leaf.src = "./leaf.png";
 images.tallTree.src = "./tall_tree.png";
@@ -126,21 +128,36 @@ const layers = {
 const crateConfig = {
   count: 5,
   scale: 0.2,
-  minXRatio: 0.25,
-  maxXRatio: 0.8,
+  minXRatio: 0.2,
+  maxXRatio: 0.95,
   minYRatio: 0.2,
-  maxYRatio: 0.6,
-  minGap: 5,
+  maxYRatio: 0.4,
+  minGap: 0,
 };
+
+// Number cloud placement bands (left-to-right).
+// Each draggable cloud is anchored to one band and never leaves it.
+const NUMBER_TILE_X_BANDS = [
+  [0.2, 0.35],
+  [0.35, 0.5],
+  [0.5, 0.65],
+  [0.65, 0.8],
+  [0.8, 0.95],
+];
+
+// Floating animation on .num uses +/-5px translations in X/Y.
+// Reserve this offset when computing safe hitbox sizing and placement.
+const NUMBER_TILE_FLOAT_MAX_OFFSET_PX = 5;
+const NUMBER_TILE_MIN_GAP_PX = 6;
 
 
 let crates = [];
 
 const particleConfigs = {
 
-  numLeavesAmbient: 50, // existing "current" leaves
-  numLeavesTreePerSide: 50, // same rate as ambient per side tree
-  numLeavesSky: 25, // 50% of ambient rate
+  numLeavesAmbient: 10, // existing "current" leaves
+  numLeavesTreePerSide: 0, // same rate as ambient per side tree
+  numLeavesSky: 5, // 50% of ambient rate
   minLeafSize: 20, // ALL leaves: 20px–40px square
   maxLeafSize: 40,
   windFrequency: 0.005,
@@ -635,47 +652,39 @@ function initCrates() {
 
   const radius = Math.max(crateWidth, crateHeight) / 2;
 
-  const minX = canvas.width * crateConfig.minXRatio + crateWidth / 2;
-  const maxX = canvas.width * crateConfig.maxXRatio - crateWidth / 2;
   const minY = canvas.height * crateConfig.minYRatio + crateHeight / 2;
   const maxY = canvas.height * crateConfig.maxYRatio - crateHeight / 2;
 
-  const maxAttemptsPerCrate = 500;
+  const usableBands = NUMBER_TILE_X_BANDS.slice(0, crateConfig.count);
+  for (let i = 0; i < usableBands.length; i++) {
+    const band = usableBands[i];
+    const bandStart = band[0];
+    const bandEnd = band[1];
 
-  for (let i = 0; i < crateConfig.count; i++) {
-    let placed = false;
-    let attempts = 0;
+    const bandLeft = canvas.width * bandStart;
+    const bandRight = canvas.width * bandEnd;
 
-    while (!placed && attempts < maxAttemptsPerCrate) {
-      attempts++;
+    // Keep the entire tile (plus tiny float wiggle) inside its own band.
+    const safeMinX = bandLeft + crateWidth / 2 + NUMBER_TILE_FLOAT_MAX_OFFSET_PX;
+    const safeMaxX = bandRight - crateWidth / 2 - NUMBER_TILE_FLOAT_MAX_OFFSET_PX;
 
-      const cx = minX + Math.random() * (maxX - minX);
-      const cy = minY + Math.random() * (maxY - minY);
-
-      let ok = true;
-      for (let j = 0; j < crates.length; j++) {
-        const other = crates[j];
-        const dx = cx - other.cx;
-        const dy = cy - other.cy;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const minDist = radius * 2 + crateConfig.minGap;
-        if (dist < minDist) {
-          ok = false;
-          break;
-        }
-      }
-
-      if (ok) {
-        crates.push({
-          cx,
-          cy,
-          width: crateWidth,
-          height: crateHeight,
-          radius,
-        });
-        placed = true;
-      }
+    let cx;
+    if (safeMinX <= safeMaxX) {
+      cx = safeMinX + Math.random() * (safeMaxX - safeMinX);
+    } else {
+      // Fallback for narrow screens: center in band.
+      cx = (bandLeft + bandRight) / 2;
     }
+
+    const cy = minY + Math.random() * Math.max(0, maxY - minY);
+
+    crates.push({
+      cx,
+      cy,
+      width: crateWidth,
+      height: crateHeight,
+      radius,
+    });
   }
 
   updateNumberTilePositions();
@@ -1823,12 +1832,14 @@ function updateStumpsLayout() {
         // Apply progression-based scaling and coloring after layout
   updateCubesProgression();
 
-  // Update DOM-based mode arrow drawn on top of stumps.
+    // Update DOM-based mode arrow drawn on top of stumps.
   updateDomModeArrow();
   updateBottomModeArrowLayout();
   updateBottomModeArrowDirection();
   ensureDescendingHint();
+  ensureAscendingHint();
 }
+
 
 
 
@@ -2205,6 +2216,9 @@ const orderInfo = document.getElementById("orderInfo");
 const difficultyInfo = document.getElementById("difficultyInfo");
 const descendingStartArrow = document.getElementById("descendingStartArrow");
 const descendingStartLabel = document.getElementById("descendingStartLabel");
+const ascendingStartArrow = document.getElementById("ascendingStartArrow");
+const ascendingStartLabel = document.getElementById("ascendingStartLabel");
+
 
 let speechTypewriterTimer = null;
 let lastSpeechText = "";
@@ -2220,6 +2234,11 @@ let rewardClaimRevealTimeoutId = null;
 // Descending-mode start hint state
 let descendingHintTimer = null;
 let descendingHintFadedOut = false;
+
+// Ascending-mode start hint state
+let ascendingHintTimer = null;
+let ascendingHintFadedOut = false;
+
 
 
 function getDescendingHintElements() {
@@ -2355,6 +2374,131 @@ function fadeOutDescendingHintOnceFirstPlacement() {
     label.classList.remove("descending-hint-fade-out");
   }, 1000);
 }
+
+function getAscendingHintElements() {
+  return {
+    arrow: ascendingStartArrow || document.getElementById("ascendingStartArrow"),
+    label: ascendingStartLabel || document.getElementById("ascendingStartLabel"),
+  };
+}
+
+function stopAscendingHintAnimations() {
+  if (ascendingHintTimer != null) {
+    window.clearInterval(ascendingHintTimer);
+    ascendingHintTimer = null;
+  }
+}
+
+function resetAscendingHintState() {
+  ascendingHintFadedOut = false;
+  stopAscendingHintAnimations();
+  const { arrow, label } = getAscendingHintElements();
+  if (!arrow || !label) return;
+
+  arrow.style.display = "none";
+  label.style.display = "none";
+  arrow.style.opacity = "1";
+  label.style.opacity = "1";
+
+  arrow.classList.remove("descending-arrow-spin", "descending-hint-fade-out");
+  label.classList.remove("descending-label-pulse", "descending-hint-fade-out");
+}
+
+function updateAscendingHintLayout() {
+  const { arrow, label } = getAscendingHintElements();
+  if (!slotsBox || !arrow || !label) return;
+
+  const mode = (gameState && gameState.mode) || "ascending";
+  if (mode !== "ascending") {
+    arrow.style.display = "none";
+    label.style.display = "none";
+    return;
+  }
+  if (ascendingHintFadedOut) {
+    arrow.style.display = "none";
+    label.style.display = "none";
+    return;
+  }
+
+  const wrappers = Array.from(slotsBox.querySelectorAll(".slot-wrapper"));
+  if (!wrappers.length) {
+    arrow.style.display = "none";
+    label.style.display = "none";
+    return;
+  }
+
+  const rects = wrappers
+    .map((wrapper) => wrapper.getBoundingClientRect())
+    .filter((rect) => rect.width > 0 && rect.height > 0);
+  if (!rects.length) {
+    arrow.style.display = "none";
+    label.style.display = "none";
+    return;
+  }
+
+  // Find leftmost cloud wrapper to anchor the arrow horizontally.
+  let leftmost = rects[0];
+  for (let i = 1; i < rects.length; i++) {
+    if (rects[i].left < leftmost.left) {
+      leftmost = rects[i];
+    }
+  }
+
+  const centerX = leftmost.left + leftmost.width / 2;
+  const arrowTop = leftmost.top - 20; // 20px above the cloud wrapper
+
+  arrow.style.display = "block";
+  label.style.display = "flex";
+
+  arrow.style.left = `${centerX}px`;
+  arrow.style.top = `${arrowTop}px`;
+
+  const labelHeight = label.getBoundingClientRect().height * 1.25 || 0;
+  const labelTop = arrowTop - labelHeight - 4;
+  
+  label.style.left = `${centerX}px`;
+  label.style.top = `${labelTop}px`;
+}
+
+function ensureAscendingHint() {
+  const mode = (gameState && gameState.mode) || "ascending";
+  if (mode !== "ascending") {
+    resetAscendingHintState();
+    return;
+  }
+
+  const { arrow, label } = getAscendingHintElements();
+  if (!arrow || !label) return;
+
+  ascendingHintFadedOut = false;
+  arrow.style.opacity = "1";
+  label.style.opacity = "1";
+
+  updateAscendingHintLayout();
+  stopAscendingHintAnimations();
+}
+
+function fadeOutAscendingHintOnceFirstPlacement() {
+  const mode = (gameState && gameState.mode) || "ascending";
+  if (mode !== "ascending" || ascendingHintFadedOut) return;
+
+  const { arrow, label } = getAscendingHintElements();
+  if (!arrow || !label) return;
+
+  ascendingHintFadedOut = true;
+  stopAscendingHintAnimations();
+
+  arrow.classList.add("descending-hint-fade-out");
+  label.classList.add("descending-hint-fade-out");
+
+  window.setTimeout(() => {
+    arrow.style.display = "none";
+    label.style.display = "none";
+    arrow.classList.remove("descending-hint-fade-out");
+    label.classList.remove("descending-hint-fade-out");
+  }, 1000);
+}
+
 
 
 function setBubbleVisibility(isVisible) {
@@ -2544,8 +2688,42 @@ function selectMode(mode) {
   }
 }
 
+function normalizeDifficulty(level) {
+  const normalized = String(level || "").toLowerCase();
+  if (normalized === "medium") return "medium";
+  if (normalized === "hard") return "hard";
+  return "easy";
+}
+
+function getDifficultyConfig(difficulty) {
+  if (difficulty === "medium") {
+    return {
+      min: 11,
+      max: 20,
+      label: "進階挑戰 (11-20)",
+    };
+  }
+
+  if (difficulty === "hard") {
+    return {
+      min: 1,
+      max: 20,
+      label: "終極挑戰 (1-20)",
+    };
+  }
+
+  return {
+    min: 1,
+    max: 10,
+    label: "初級挑戰 (1-10)",
+  };
+}
+
 function startGame(difficulty) {
-  gameState.difficulty = difficulty;
+  const normalizedDifficulty = normalizeDifficulty(difficulty);
+  const difficultyConfig = getDifficultyConfig(normalizedDifficulty);
+
+  gameState.difficulty = normalizedDifficulty;
   gameState.selectedNumbers = [];
   gameState.nextIndex = 0;
 
@@ -2554,10 +2732,11 @@ function startGame(difficulty) {
   if (gameArea) gameArea.classList.remove("hidden");
 
   // 生成數字
-  const max = difficulty === "easy" ? 10 : 20;
+  const min = difficultyConfig.min;
+  const max = difficultyConfig.max;
   gameState.numbers = [];
   while (gameState.numbers.length < 5) {
-    const n = Math.floor(Math.random() * max) + 1;
+    const n = Math.floor(Math.random() * (max - min + 1)) + min;
     if (!gameState.numbers.includes(n)) gameState.numbers.push(n);
   }
 
@@ -2571,8 +2750,7 @@ function startGame(difficulty) {
   }
 
   if (difficultyInfo) {
-    difficultyInfo.innerHTML =
-      difficulty === "easy" ? "初級挑戰 (1-10)" : "進階挑戰 (1-20)";
+    difficultyInfo.innerHTML = difficultyConfig.label;
   }
 
     renderNumbers();
@@ -2580,11 +2758,13 @@ function startGame(difficulty) {
   updateStumpsLayout();
 
     setSpeech("👋 請將數字依序拉到空格 😊");
-  updateBottomModeArrowLayout();
+    updateBottomModeArrowLayout();
   updateBottomModeArrowDirection();
-  // Show descending start hint when applicable.
+  // Show start hints when applicable.
   ensureDescendingHint();
+  ensureAscendingHint();
 }
+
 
 
 
@@ -2787,6 +2967,22 @@ function renderNumbers() {
     tileWidth = Math.min(window.screen.availHeight * 0.125, window.screen.availWidth * 0.125);
     tileHeight = tileWidth / cloudAspectRatio;
   } else {
+    tileHeight = tileWidth / cloudAspectRatio;
+  }
+
+  // Cap tile width by band width so neighbouring cloud hitboxes never touch,
+  // even when both are at opposite +/-5px float offsets.
+  const layoutWidth = (canvas && canvas.width) || window.innerWidth || 800;
+  const minBandWidthPx = NUMBER_TILE_X_BANDS.reduce((minWidth, band) => {
+    const bandWidth = Math.max(0, (band[1] - band[0]) * layoutWidth);
+    return Math.min(minWidth, bandWidth);
+  }, Number.POSITIVE_INFINITY);
+  if (isFinite(minBandWidthPx) && minBandWidthPx > 0) {
+    const safeMaxTileWidth = Math.max(
+      24,
+      minBandWidthPx - NUMBER_TILE_FLOAT_MAX_OFFSET_PX * 2 - NUMBER_TILE_MIN_GAP_PX
+    );
+    tileWidth = Math.min(tileWidth, safeMaxTileWidth);
     tileHeight = tileWidth / cloudAspectRatio;
   }
 
@@ -3104,10 +3300,12 @@ function renderSlots() {
   }
 
     updateGateOverlays();
-  updateBottomModeArrowLayout();
+    updateBottomModeArrowLayout();
   updateBottomModeArrowDirection();
   ensureDescendingHint();
+  ensureAscendingHint();
 }
+
 
 
 
@@ -3360,11 +3558,15 @@ function checkDigitRealTime(slot, value) {
 
     // Compute stump position in canvas coordinates and trigger success effect
 
-    // In descending mode, fade out the start arrow/label after the first
+        // In ascending/descending mode, fade out the start arrow/label after the first
     // correctly placed cloud.
     if ((gameState && gameState.mode) === "descending" && gameState.selectedNumbers.length === 1) {
       fadeOutDescendingHintOnceFirstPlacement();
     }
+    if ((gameState && gameState.mode) === "ascending" && gameState.selectedNumbers.length === 1) {
+      fadeOutAscendingHintOnceFirstPlacement();
+    }
+
 
         if (canvas) {
 
@@ -3626,9 +3828,11 @@ function resetGameUiForNextQuestion() {
     }
   }
 
-  // Reset descending-mode hint for the next question.
+    // Reset mode hints for the next question.
   resetDescendingHintState();
+  resetAscendingHintState();
 }
+
 
 
 function showVictoryModal() {
@@ -3652,9 +3856,9 @@ function showVictoryModal() {
     const totalSeconds = getTotalSecondsForRun();
     if (messageEl) {
       messageEl.textContent =
-        "🎉 挑戰大成功！\n你使用了" +
+        "🎉 挑戰成功！\n你使用了" +
         totalSeconds +
-        "秒完成三個關卡。\n表現出色👏";
+        "秒完成3個關卡。\n表現出色👏";
       messageEl.style.color = "#16a34a";
     }
 
@@ -3816,9 +4020,11 @@ function updateBottomModeArrowLayout() {
     slotsBox.style.top = `${stripTop - slotsHeight}px`;
   }
 
-  // Keep descending-mode hint aligned to the rightmost cloud.
+    // Keep mode hints aligned to the clouds.
   updateDescendingHintLayout();
+  updateAscendingHintLayout();
 }
+
 
 
 
@@ -3881,6 +4087,7 @@ window.onload = function () {
   if (!level) {
     level = "easy";
   }
+  level = normalizeDifficulty(level);
   gameState.mode = mode;
   startGame(level);
 

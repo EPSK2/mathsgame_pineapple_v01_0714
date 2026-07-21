@@ -45,8 +45,9 @@ body {
   transform: translate(-50%, -100%);
 }
 
-/* Descending-mode start hint (arrow + label) */
-#descendingStartArrow {
+/* Descending/ascending-mode start hint (arrow + label) */
+#descendingStartArrow,
+#ascendingStartArrow {
   position: fixed;
   width: 6vw;
   height: auto;
@@ -57,13 +58,13 @@ body {
   transform-style: preserve-3d;
 }
 
-#descendingStartLabel {
+#descendingStartLabel,
+#ascendingStartLabel {
   position: fixed;
   /* Prefer horizontal text: allow width to grow while keeping a minimum target of ~4vw */
   width: auto;
   min-width: 5vw;
-  max-width: 140px;
-  padding: 4px 6px;
+  max-width: 10vw;
   box-sizing: border-box;
   background-color: #FFC16A;
   border: 10px solid #FFC16A;
@@ -81,6 +82,7 @@ body {
   transform: translate(-50%, 0) scale(1.5);
   transform-origin: center center;
 }
+
 
 
 .descending-hint-fade-out {

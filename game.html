@@ -37,17 +37,26 @@
     id="yellowBubbleImage"
     src="./yellow_bubble.png"
     alt="黃色對話泡泡"
-    style="position: fixed; pointer-events: none; display: none; z-index: 5; transform: translateY(-90%) translateX(-2.5%) scale(0.4); transform-origin: bottom left; opacity: 0.9;"
+    style="position: fixed; pointer-events: none; display: none; z-index: 5; transform: translateY(-105%) translateX(-10%) scale(0.45); transform-origin: bottom left; opacity: 0.9;"
   />
     <div id="yellowBubbleText" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- Descending-mode start hint (arrow + label) -->
+    <!-- Descending-mode start hint (arrow + label) -->
   <img
     id="descendingStartArrow"
     src="./down_arrow.png"
-    alt="下降模式起點箭頭"
+    alt="向下箭嘴"
   />
   <div id="descendingStartLabel">從這裏開始</div>
+
+  <!-- Ascending-mode start hint (arrow + label) -->
+  <img
+    id="ascendingStartArrow"
+    src="./down_arrow.png"
+    alt="向下箭嘴"
+  />
+  <div id="ascendingStartLabel">從這裏開始</div>
+
 
   <!-- Top-left slide-out menu arrow -->
   <button
@@ -87,6 +96,7 @@
       </span>
             <span
         id="difficultyInfo"
+        data-supported-levels="easy,medium,hard"
         class="font-bold text-amber-600 drop-shadow-sm"
         style="font-size:clamp(1.5rem, 2.5vw, 4rem)"
       ></span>

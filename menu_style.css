@@ -14,7 +14,7 @@ body {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 7.5vh;
+  height: 10vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -84,7 +84,6 @@ body {
 /* Centered game container over the canvas */
 .game-shell {
   position: relative;
-  z-index: 2000; /* ensure tutorial overlay can sit above menu arrows (z-1500) */
   padding: 1.5rem;
   width: 100%;
 }
@@ -151,6 +150,7 @@ body {
   height: 30vh;
   opacity: 1;
   transition: opacity 3s ease;
+  z-index: 1750 !important;
 }
 
 #animatedBearVideo {
@@ -158,6 +158,7 @@ body {
   height: 30vh;
   opacity: 0;
   transition: opacity 2s ease;
+  z-index: 1750 !important;
 }
 
 @keyframes bearVideoSlideIn {
@@ -248,7 +249,7 @@ body {
   min-width: 220px;
   border-radius: 20px;
     /* Responsive font size: same clamp logic as dialog text */
-  font-size: clamp(2rem, 6vh, 3vw);
+  font-size: clamp(1.5rem, 6vh, 3vw);
 
   text-align: center;
   box-shadow: 0 6px 0 rgba(55, 65, 81, 0.25);

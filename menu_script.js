@@ -49,7 +49,7 @@ const layers = {
 const particleConfigs = {
   numLeavesAmbient: 10,
   numLeavesTreePerSide: 0,
-  numLeavesSky: 10,
+  numLeavesSky: 5,
   minLeafSize: 20,
   maxLeafSize: 40,
   windFrequency: 0.005,
@@ -592,7 +592,7 @@ const tutorialPages = [
   `,
   `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.1rem;">
-      <video src="ins04.webm" muted loop autoplay style="max-height: 40vh; height: auto; width: auto;"></video>
+      <video src="ins04.mp4" muted loop autoplay style="max-height: 40vh; height: auto; width: auto;"></video>
       <div class="tutorial-text-block leading-relaxed text-gray-700 whitespace-pre-line">用手指/滑鼠按住雲朵，拖動到正確位置上！</div>
     </div>
   `,
@@ -1164,13 +1164,13 @@ function startMenuDialogSystem() {
     {
       type: "Choice",
       Question: "選擇一個難度吧~",
-      AnswerNo: 2,
-      AnswerArr: ["初級挑戰 (1-10)", "進階挑戰 (1-20)"],
+      AnswerNo: 3,
+      AnswerArr: ["初級挑戰 (1-10)", "進階挑戰 (11-20)", "終極挑戰 (1-20)"],
     },
     {
       type: "TextFinal",
       Speaker: "菠蘿熊",
-      Content: "水果熊，準備好了嗎？挑戰要開始啦！",
+      Content: "水果熊，準備好了嗎？\n挑戰要開始啦！",
       Event: "playNextPageSound",
     },
   ];
@@ -1200,7 +1200,7 @@ document.addEventListener("dialogChoiceSelected", (event) => {
     } else if (node.Question.includes("難度")) {
 
       // Difficulty selection
-      const difficulty = answerIndex === 0 ? "easy" : "hard";
+      const difficulty = answerIndex === 0 ? "easy" : (answerIndex === 1 ? "medium" : "hard");
       setTimeout(() => {
         startGame(difficulty);
       }, 2000);
